@@ -3,6 +3,7 @@
 #include<iostream>
 #include<windows/window.h>
 #include<opengl/helloworld.h>
+#include<opengl/shaderReader.h>
 
 const char* VERTEX_SHADER_SOURCE="#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -64,7 +65,14 @@ int main()
 
 	uint vertexShader, fragmentShader, fragmentShader2;
 
-	context->shader1_->CreateShader(&vertexShader, GL_VERTEX_SHADER, 1, (char*)VERTEX_SHADER_SOURCE);
+	ShaderReader reader;
+
+	//不能连一块写，连一块的时候，转为char* 会产生乱码,后面shader相关的全部封装为类对象
+	std::string  s = reader.Read("../Shaders/helloworld.vs");
+	char* source = (char*)s.c_str();
+	if (source == NULL) return -10;
+
+	context->shader1_->CreateShader(&vertexShader, GL_VERTEX_SHADER, 1, source);
 	context->shader1_->CreateShader(&fragmentShader, GL_FRAGMENT_SHADER, 1, (char*)FRAGMENT_SHADER_SOURCE);
 	context->shader2_->CreateShader(&fragmentShader2, GL_FRAGMENT_SHADER, 1, (char*)FRAGMENT_SHADER_SOURCE_SECOND);
 	uint* shaders[2] = {
