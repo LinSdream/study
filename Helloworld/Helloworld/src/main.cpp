@@ -67,7 +67,9 @@ int main()
 
 	ShaderReader reader;
 
-	//不能连一块写，连一块的时候，转为char* 会产生乱码,后面shader相关的全部封装为类对象
+	//坑点：
+	//不能在类对象内部调用c_str()方法，因为连一块写的话，会产生一个临时变量存住string的内容，然后这个string就会被销毁，导致内容丢失.
+	//因此需要显性的有个temp变量hold住字符串内容，然后在调用c_str()
 	std::string  s = reader.Read("../Shaders/helloworld.vs");
 	char* source = (char*)s.c_str();
 	if (source == NULL) return -10;
