@@ -1,11 +1,6 @@
 #pragma once
 #include<opengl/helperFun.h>
 
-#define SUCCESS 0
-#define UNKNOWN -1
-#define FAILED -2
-#define ARRAY_SIZE(vertices) (sizeof(vertices)/sizeof(float))
-
 class HelloworldEnvironment
 {
 
@@ -28,6 +23,7 @@ public:
 	bool Link(uint** shaders,int size);
 	void UseProgram();
 	bool CreateShader(uint* shader,GLenum type,int shaderSouceSize, char* shaderSource);
+	uint GetProgramID() { return shaderProgram_; }
 
 private:
 	uint shaderProgram_;
@@ -154,4 +150,34 @@ private:
 
 	uint vaos_[2];
 	uint vbos_[2];
+};
+
+class Shader 
+{
+public:
+
+	enum FailedCode 
+	{
+		CREATE_VERTEX_SHADER_FAILED = 11,
+		CREATE_FRAGMENT_SHADER_FAILED = 12,
+	};
+
+	Shader(char* vertex, char* fragment);
+	~Shader();
+
+	void Use() { glUseProgram(programID_); }
+	uint GetID() { return programID_; }
+	int InitiationStatus() { return code_; }
+
+	void Set4f(const char* name, float x, float y, float z, float w);
+	void SetFloat(const char* name, float value);
+	void SetBoolean(const char* name, bool value);
+	void SetInt(const char* name, int value);
+
+private:
+
+	uint programID_;
+	int code_;
+	uint vertexShader_;
+	uint fragmentShader_;
 };

@@ -1,4 +1,5 @@
 #include<opengl/shaderReader.h>
+#include<opengl/helperFun.h>
 #include<sstream>
 
 ShaderReader::ShaderReader() 
@@ -22,7 +23,7 @@ std::string ShaderReader::Read(const char* path)
 		{
 			std::cout << "Open File Failed: " << path << std::endl;
 			file.close();
-			return NULL;
+			return EMPTY_STR;
 		}
 
 		std::stringstream stream;
@@ -33,6 +34,6 @@ std::string ShaderReader::Read(const char* path)
 	catch (std::ifstream::failure e) 
 	{
 		std::cout << "ERROR:SHADER::FILE_NOT_SUCCESFULLY_READ. IFSTREAM.FAILURE CODE: " << e.code() << std::endl;
-		return NULL;
+		return EMPTY_STR;
 	}
 }

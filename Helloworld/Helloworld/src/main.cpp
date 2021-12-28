@@ -5,27 +5,6 @@
 #include<opengl/helloworld.h>
 #include<opengl/shaderReader.h>
 
-const char* VERTEX_SHADER_SOURCE="#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-	"}\0";
-
-const char* FRAGMENT_SHADER_SOURCE="#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-	"}\n\0";
-
-const char* FRAGMENT_SHADER_SOURCE_SECOND = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(0.5f, 0.2f, 0.9f, 1.0f);\n"
-"}\n\0";
-
 class Context;
 
 void Update(GLFWwindow* window, void* context);
@@ -70,13 +49,17 @@ int main()
 	//坑点：
 	//不能在类对象内部调用c_str()方法，因为连一块写的话，会产生一个临时变量存住string的内容，然后这个string就会被销毁，导致内容丢失.
 	//因此需要显性的有个temp变量hold住字符串内容，然后在调用c_str()
-	std::string  s = reader.Read("../Shaders/helloworld.vs");
-	char* source = (char*)s.c_str();
-	if (source == NULL) return -10;
+	std::string temp = reader.Read("../Shaders/helloworld.vs");
+	if (temp.empty()) return FAILED;
+	
+	context->shader1_->CreateShader(&vertexShader, GL_VERTEX_SHADER, 1, (char*)temp.c_str());
 
-	context->shader1_->CreateShader(&vertexShader, GL_VERTEX_SHADER, 1, source);
-	context->shader1_->CreateShader(&fragmentShader, GL_FRAGMENT_SHADER, 1, (char*)FRAGMENT_SHADER_SOURCE);
-	context->shader2_->CreateShader(&fragmentShader2, GL_FRAGMENT_SHADER, 1, (char*)FRAGMENT_SHADER_SOURCE_SECOND);
+	temp = reader.Read("../Shaders/helloworld.fs");
+	if (temp.empty()) return FAILED;
+
+	context->shader1_->CreateShader(&fragmentShader, GL_FRAGMENT_SHADER, 1, (char*)temp.c_str());
+	context->shader2_->CreateShader(&fragmentShader2, GL_FRAGMENT_SHADER, 1, (char*)temp.c_str());
+	
 	uint* shaders[2] = {
 		&vertexShader,
 		&fragmentShader
@@ -124,9 +107,19 @@ void Update(GLFWwindow* window,void*context)
 	c->env_->PressInput(window);
 
 	c->shader1_->UseProgram();
+
+	float time = glfwGetTime();
+	float greenValue = sin(time) / 2.0f + 0.5f;
+	int vertexColorLocation = glGetUniformLocation(c->shader1_->GetProgramID(), "ourColor");
+	glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
 	c->draw1_->Draw();
 
 	c->shader2_->UseProgram();
+
+	vertexColorLocation = glGetUniformLocation(c->shader2_->GetProgramID(), "ourColor");
+	glUniform4f(vertexColorLocation, 0.5f, 0.2f, 0.9f, 1.0f);
+
 	c->draw2_->Draw();
 }
 

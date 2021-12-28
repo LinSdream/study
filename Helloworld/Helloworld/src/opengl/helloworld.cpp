@@ -327,3 +327,43 @@ void DrawTwoTriangleUseDiffVAOandVBO::Draw()
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
+
+Shader::Shader(char* vertex,char* fragment) 
+{
+	programID_ = glCreateProgram();
+
+	code_ = SUCCESS;
+
+	vertexShader_=glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader_, 1, &vertex, NULL);
+	glCompileShader(vertexShader_);
+	int success;
+	glGetShaderiv(vertexShader_, GL_COMPILE_STATUS, &success);
+	if(!success)
+	{
+		char log[512];
+		glGetShaderInfoLog(vertexShader_, 512, NULL, log);		
+		std::cout << "Create GL_VERTEX_SHADER Failed.Code:" << success << "Shader Source:" << vertex << std::endl;
+		code_ = CREATE_VERTEX_SHADER_FAILED;
+		return;
+	}
+
+	fragmentShader_ = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader_, 1, &fragment, NULL);
+	glCompileShader(fragmentShader_);
+	glGetShaderiv(fragmentShader_, GL_COMPILE_STATUS, &success);
+	if (!success)
+	{
+		char log[512];
+		glGetShaderInfoLog(fragmentShader_, 512, NULL, log);
+		std::cout << "Create GL_FRAGMENT_SHADER Failed.Code:" << success << "Shader Source:" << fragment << std::endl;
+		code_ = CREATE_VERTEX_SHADER_FAILED;
+		return;
+	}
+}
+
+Shader::~Shader() 
+{
+	glDeleteShader(programID_);
+}
+

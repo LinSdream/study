@@ -2,7 +2,6 @@
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 
-
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <cstdlib>
@@ -13,6 +12,19 @@
 #else
 #define DBG_NEW new
 #endif
+
+#define EMPTY_STR ""
+
+#define SUCCESS 0
+#define UNKNOWN -1
+#define FAILED  -2
+
+///获取数组长度
+#define ARRAY_SIZE(vertices) (sizeof(vertices)/sizeof(vertices[0]))
+/////得到一个结构体中field所占用的字节数
+//#define FSIZ(type,fileld) sizeof(((type*)0)->field)
+
+#define CHAR_POINTER ((char*))
 
 typedef unsigned int uint;
 
