@@ -15,66 +15,10 @@ void HelloworldEnvironment::PressInput(GLFWwindow *window)
 	}
 }
 
-void HellowworldGradientEnvironment::Background(GLFWwindow* window)
+void HelloworldGradientEnvironment::Background(GLFWwindow* window)
 {
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
-}
-
-ShaderContext::ShaderContext()
-{
-	shaderProgram_ = glCreateProgram();
-}
-
-bool ShaderContext::Link(uint** shaders, int size) 
-{
-	if (shaderProgram_ == NULL) return false;
-	for (int i = 0; i < size; i++) 
-	{
-		glAttachShader(shaderProgram_, *(shaders[i]));
-	}
-
-	glLinkProgram(shaderProgram_);
-
-	int success;
-	glGetProgramiv(shaderProgram_, GL_LINK_STATUS, &success);
-	if (!success) 
-	{
-		char log[512];
-		glGetProgramInfoLog(shaderProgram_, 512, NULL, log);
-		std::cout << "Link Shader Program Failed.Info:" << log << std::endl;
-		return false;
-	}
-	for (int i = 0; i < size; i++) 
-	{
-		glDeleteShader(*(shaders[i]));
-	}
-	return true;
-}
-
-void ShaderContext::UseProgram() 
-{
-	if (shaderProgram_ == NULL) return;
-
-	glUseProgram(shaderProgram_);
-}
-
-bool ShaderContext::CreateShader(uint* shader,GLenum type, int shaderSouceSize, char* shaderSource) 
-{
-	*shader = glCreateShader(type);
-	glShaderSource(*shader, shaderSouceSize, &shaderSource, NULL);
-	glCompileShader(*shader);
-
-	int success;
-	glGetShaderiv(*shader, GL_COMPILE_STATUS, &success);
-	if(!success) 
-	{
-		char log[512];
-		glGetShaderInfoLog(*shader, 512, NULL, log);
-		std::cout << "Create Shader Failed.Shader Type Code:" << type << "Shader Source:" << shaderSource << std::endl;
-		return false;
-	}
-	return true;
 }
 
 VBOContext::VBOContext()
@@ -127,7 +71,7 @@ void EBOContext::Bind()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
 }
 
-DrawTriangle::DrawTriangle() :DrawBase()
+DrawTriangle::DrawTriangle(Shader* shader) :DrawBase(shader)
 {
 	vao_ = new VAOContext();
 	vbo_ = new VBOContext();
@@ -162,13 +106,14 @@ void DrawTriangle::Init()
 	glBindVertexArray(0);
 }
 
-void DrawTriangle::Draw() 
+void DrawTriangle::Draw(DrawFun fun)
 {
+	if (fun != NULL) fun(shader_);
 	vao_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-DrawRectangle::DrawRectangle()
+DrawRectangle::DrawRectangle(Shader* shader):DrawBase(shader)
 {
 	vao_ = new VAOContext();
 	ebo_ = new EBOContext();
@@ -214,13 +159,14 @@ void DrawRectangle::Init()
 
 }
 
-void DrawRectangle::Draw() 
+void DrawRectangle::Draw(DrawFun fun)
 {
+	if (fun != NULL) fun(shader_);
 	vao_->Bind();
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
-DrawTwoConnectTriangle::DrawTwoConnectTriangle() 
+DrawTwoConnectTriangle::DrawTwoConnectTriangle(Shader* shader):DrawBase(shader)
 {
 	vao_ = new VAOContext();
 	vbo_ = new VBOContext();
@@ -266,14 +212,14 @@ void DrawTwoConnectTriangle::Init()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void DrawTwoConnectTriangle::Draw() 
+void DrawTwoConnectTriangle::Draw(DrawFun fun)
 {
+	if (fun != NULL) fun(shader_);
 	vao_->Bind();
-	
 	glDrawArrays(GL_TRIANGLES, 0, 9);
 }
 
-DrawTwoTriangleUseDiffVAOandVBO::DrawTwoTriangleUseDiffVAOandVBO() 
+DrawTwoTriangleUseDiffVAOandVBO::DrawTwoTriangleUseDiffVAOandVBO(Shader* shader):DrawBase(shader)
 {
 	glGenBuffers(2, vbos_);
 	glGenVertexArrays(2, vaos_);
@@ -317,8 +263,9 @@ void DrawTwoTriangleUseDiffVAOandVBO::Init()
 
 }
 
-void DrawTwoTriangleUseDiffVAOandVBO::Draw() 
+void DrawTwoTriangleUseDiffVAOandVBO::Draw(DrawFun fun)
 {
+	if (fun != NULL) fun(shader_);
 	glBindVertexArray(vaos_[0]);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -360,6 +307,25 @@ Shader::Shader(char* vertex,char* fragment)
 		code_ = CREATE_VERTEX_SHADER_FAILED;
 		return;
 	}
+
+	glAttachShader(programID_, vertexShader_);
+	glAttachShader(programID_, fragmentShader_);
+
+	glLinkProgram(programID_);
+
+	glGetProgramiv(programID_, GL_LINK_STATUS, &success);
+	if (!success) 
+	{
+		char log[512];
+		glGetProgramInfoLog(programID_, 512, NULL, log);
+		std::cout << "Link Shader Program Failed.Code:" << success << "Info:" << log << std::endl;
+		code_ = LINKE_PROGRAME_FAILED;
+		return;
+	}
+
+	glDeleteShader(vertexShader_);
+	glDeleteShader(fragmentShader_);
+	
 }
 
 Shader::~Shader() 
@@ -367,3 +333,38 @@ Shader::~Shader()
 	glDeleteShader(programID_);
 }
 
+void Shader::Set4f(const char* name, float x, float y, float z, float w) 
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	glUniform4f(uniformID, x, y, z, w);
+}
+
+void Shader::Set3f(const char* name, float x, float y, float z)
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	glUniform3f(uniformID, x, y, z);
+}
+
+void Shader::Set2f(const char* name, float x, float y)
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	glUniform2f(uniformID, x, y);
+}
+
+void Shader::SetFloat(const char* name, float value) 
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	glUniform1f(uniformID, value);
+}
+
+void Shader::SetBoolean(const char* name, bool value) 
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	glUniform1i(uniformID, (int)value);
+}
+
+void Shader::SetInt(const char* name, int value) 
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	glUniform1i(uniformID, value);
+}

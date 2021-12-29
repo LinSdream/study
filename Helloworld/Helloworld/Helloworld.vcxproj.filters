@@ -36,9 +36,6 @@
     <ClInclude Include="includes\opengl\helperFun.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="includes\opengl\shaderReader.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -54,9 +51,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\opengl\helperFun.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="src\opengl\shaderReader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

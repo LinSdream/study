@@ -1,6 +1,7 @@
 #pragma once
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
+#include<string>
 
 #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
@@ -37,3 +38,5 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 //void UnBindVertexArrays();
 
 void SetVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* pointer);
+
+std::string ReadFile(const char* path);

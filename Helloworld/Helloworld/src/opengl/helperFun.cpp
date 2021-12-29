@@ -1,4 +1,7 @@
 #include<opengl/helperFun.h>
+#include<fstream>
+#include<sstream>
+#include<iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -29,4 +32,30 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 void SetVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void* pointer)
 {
 	glVertexAttribPointer(index, size, type, normalized, stride, pointer);
+}
+
+std::string ReadFile(const char* path)
+{
+	std::ifstream file;
+	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	try
+	{
+		file.open(path);
+		if (!file.good())
+		{
+			std::cout << "Open File Failed: " << path << std::endl;
+			file.close();
+			return EMPTY_STR;
+		}
+
+		std::stringstream stream;
+		stream << file.rdbuf();
+		file.close();
+		return stream.str();
+	}
+	catch (std::ifstream::failure e)
+	{
+		std::cout << "ERROR:SHADER::FILE_NOT_SUCCESFULLY_READ. IFSTREAM.FAILURE CODE: " << e.code() << std::endl;
+		return EMPTY_STR;
+	}
 }
