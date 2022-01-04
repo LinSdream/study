@@ -90,14 +90,26 @@ void DrawTriangle::Init()
 	vbo_->Bind();
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, // left  
-		0.5f, -0.5f, 0.0f, // right 
-		0.0f,  0.5f, 0.0f  // top   
+		//位置				//颜色
+		-0.1f, -0.1f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
+		0.1f, -0.1f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
+		0.0f,  0.1f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
 	};
 
 	vbo_->SetBufferData(sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+	//参考文档<https://learnopengl-cn.github.io/01%20Getting%20started/05%20Shaders/#_5>
+	//简单来说就是传递进去的数组只是一组一维的数据，而实际情况下，这数据是有多重含义的，所以就需要去指定解释各个数据的含义
+	//设置位置信息
+	//起始位置为0，每3个数据为一组数据，第一组的开始是从0开始，往后偏移6个float长度的数据
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6* sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	//设置颜色信息
+	//起始位置为0，每3个数据为一组数据，第一组的开始是从3个float之后的位置，往后偏移6个float长度的数据
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
 
 	//先设置为默认值,由于后面在Draw有重新进行绑定，所以其实可以不用，但是为了严谨这里还是进行一次的设置
 	//通过绑定0，来将当前的缓冲区设为默认值
@@ -108,6 +120,7 @@ void DrawTriangle::Init()
 
 void DrawTriangle::Draw(DrawFun fun)
 {
+	shader_->Use();
 	if (fun != NULL) fun(shader_);
 	vao_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -133,10 +146,10 @@ void DrawRectangle::Init()
 	vbo_->Bind();
 
 	float rectangleVertices[] = {
-		0.5f, 0.5f, 0.0f,   // 右上角
-		0.5f, -0.5f, 0.0f,  // 右下角
-		-0.5f, -0.5f, 0.0f, // 左下角
-		-0.5f, 0.5f, 0.0f   // 左上角
+		0.5f, 0.5f, 0.0f,1.0f,0.0f,0.0f,   // 右上角
+		0.5f, -0.5f, 0.0f,0.0f,1.0f,0.0f,  // 右下角
+		-0.5f, -0.5f, 0.0f,0.0f,0.0f,1.0f // 左下角
+		-0.5f, 0.5f, 0.0f,1.0f,0.0f,1.0f   // 左上角
 	};
 
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
@@ -152,8 +165,11 @@ void DrawRectangle::Init()
 
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
@@ -161,6 +177,7 @@ void DrawRectangle::Init()
 
 void DrawRectangle::Draw(DrawFun fun)
 {
+	shader_->Use();
 	if (fun != NULL) fun(shader_);
 	vao_->Bind();
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -188,21 +205,24 @@ void DrawTwoConnectTriangle::Init()
 
 	float vertices[] =
 	{
-		-1.0f, 0.0f, 0.0f,
-		-0.5f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.0f,
-		0.5f, 1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, -1.0f, 0.0f,
-		0.5f, 0.0f, 0.0f,
-		-0.5f, 0.0f, 0.0f,
+		-1.0f, 0.0f, 0.0f,1.0f, 0.0f, 0.0f,
+		-0.5f, 1.0f, 0.0f,0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f,0.0f, 0.0f, 1.0f,
+		0.0f, 0.0f, 0.0f,1.0f, 0.0f, 1.0f,
+		0.5f, 1.0f, 0.0f,0.0f, 1.0f, 0.0f,
+		1.0f, 0.0f, 0.0f,1.0f, 0.0f, 0.0f,
+		0.0f, -1.0f, 0.0f,0.0f, 1.0f, 0.0f,
+		0.5f, 0.0f, 0.0f,1.0f, 0.0f, 0.0f,
+		-0.5f, 0.0f, 0.0f,0.0f, 0.0f, 1.0f,
 	};
 
 	vbo_->SetBufferData(sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -214,6 +234,7 @@ void DrawTwoConnectTriangle::Init()
 
 void DrawTwoConnectTriangle::Draw(DrawFun fun)
 {
+	shader_->Use();
 	if (fun != NULL) fun(shader_);
 	vao_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 9);
@@ -235,36 +256,43 @@ void DrawTwoTriangleUseDiffVAOandVBO::Init()
 {
 
 	float vertices[] = {
-		-1.0f, 0.0f, 0.0f,
-		-0.5f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f,
+		//位置				//颜色
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
+		0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
 	};
 
 	float secondVertices[] = {
-		0.0f, 0.0f, 0.0f,
-		0.5f, 1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f,0.0f, 0.0f, 1.0f,// left
+		0.5f, 1.0f, 0.0f,0.0f, 1.0f, 0.0f, // right 
+		1.0f, 0.0f, 0.0f,1.0f, 0.0f, 0.0f,// top 
 	};
 	glBindBuffer(GL_ARRAY_BUFFER, vbos_[0]);
 	glBindVertexArray(vaos_[0]);
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbos_[1]);
 	glBindVertexArray(vaos_[1]);
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(secondVertices), secondVertices, GL_STATIC_DRAW);
 	//because the vertex data is tightly packed we can also specify 0 as the vertex attribute's stride to let OpenGL figure it out
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 }
 
 void DrawTwoTriangleUseDiffVAOandVBO::Draw(DrawFun fun)
 {
+	shader_->Use();
 	if (fun != NULL) fun(shader_);
 	glBindVertexArray(vaos_[0]);
 	glDrawArrays(GL_TRIANGLES, 0, 3);

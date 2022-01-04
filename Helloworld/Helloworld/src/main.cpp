@@ -67,18 +67,18 @@ void Update(GLFWwindow* window,void*context)
 	c->env_->Background(window);
 	c->env_->PressInput(window);
 
-	c->draw1_->Draw([](Shader* shader) {
-		shader->Use();
-		float time = glfwGetTime();
-		float greenValue = sin(time) / 2.0f + 0.5f;
-		shader->Set4f("ourColor", 0.0f, greenValue, 0.0f, 1.0f);
-		});
-
-
 	c->draw2_->Draw([](Shader* shader) {
-		shader->Use();
-		shader->Set4f("ourColor", 0.5f, 0.2f, 0.9f, 1.0f);
+		shader->SetBoolean("useOffset", false);
 		});
+
+	c->draw1_->Draw([](Shader* shader) {
+		shader->SetBoolean("useOffset", true);
+		float time = glfwGetTime();
+		float valueX = sin(time);
+		float valueY = cos(time);
+		shader->Set3f("aPosXYZ", valueX, valueY, 0.0f);
+		});
+	
 }
 
 Context* CreateContext(int* code)
@@ -122,11 +122,12 @@ Context* CreateContext(int* code)
 
 void DestroyContext(Context* context) 
 {
-
 	delete context->env_;
-	delete context->shader_;
 
 	delete context->draw1_;
 	delete context->draw2_;
+
+	delete context->shader_;
+
 	delete context;
 }
