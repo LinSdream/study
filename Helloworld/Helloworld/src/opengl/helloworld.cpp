@@ -270,7 +270,7 @@ void DrawTwoTriangleUseDiffVAOandVBO::Init()
 	glBindBuffer(GL_ARRAY_BUFFER, vbos_[0]);
 	glBindVertexArray(vaos_[0]);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
@@ -280,7 +280,7 @@ void DrawTwoTriangleUseDiffVAOandVBO::Init()
 	glBindBuffer(GL_ARRAY_BUFFER, vbos_[1]);
 	glBindVertexArray(vaos_[1]);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(secondVertices), secondVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(secondVertices), secondVertices, GL_DYNAMIC_DRAW);
 	//because the vertex data is tightly packed we can also specify 0 as the vertex attribute's stride to let OpenGL figure it out
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -301,6 +301,86 @@ void DrawTwoTriangleUseDiffVAOandVBO::Draw(DrawFun fun)
 	glBindVertexArray(vaos_[1]);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+DrawDynamicTriangle::DrawDynamicTriangle(Shader* shader):DrawBase(shader)
+{
+	vao_ = new VAOContext();
+	vbo_ = new VBOContext();
+
+}
+
+DrawDynamicTriangle::~DrawDynamicTriangle()
+{
+	delete vao_;
+	delete vbo_;
+}
+
+void DrawDynamicTriangle::Init() 
+{
+
+}
+
+void DrawDynamicTriangle::Draw(DrawFun fun)
+{
+	vao_->Bind();
+	vbo_->Bind();
+
+	float vertices[18] = {
+		//Î»ÖÃ				//ÑÕÉ«
+			-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
+			0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
+			0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// top  
+	};
+	
+	float time = glfwGetTime();
+	float cosValue = cos(time);
+	float sinValue = sin(time);
+
+	int index = 0;
+	vertices[index] = sinValue;
+	vertices[index + 1] = cosValue;
+
+	index += 6;
+	vertices[index] = sinValue * 0.5f;
+	vertices[index + 1] = cosValue * 0.5f;
+
+	index += 6;
+
+	vertices[index] = 0 - cosValue;
+	vertices[index + 1] = 0 - cosValue ;
+
+
+	index = 3;
+
+	vertices[index] = sinValue;
+	vertices[index + 1] = cosValue;
+	vertices[index + 2] = cosValue;
+
+	index += 6;
+	vertices[index] = sinValue * 0.5f;
+	vertices[index + 1] = cosValue * 0.5f;
+	vertices[index + 2] = cosValue * 0.5f;
+
+	index += 6;
+
+	vertices[index] = 0 - sinValue;
+	vertices[index + 1] = 0 - cosValue;
+	vertices[index + 2] = 0 - cosValue;
+
+	vbo_->SetBufferData(sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	vbo_->Bind();
+
+	shader_->Use();
+	if (fun != NULL) fun(shader_);
+
+	vao_->Bind();
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 Shader::Shader(char* vertex,char* fragment) 

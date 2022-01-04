@@ -113,7 +113,7 @@ Context* CreateContext(int* code)
 
 	context->env_ = new HelloworldGradientEnvironment();
 	context->draw1_ = new DrawTwoTriangleUseDiffVAOandVBO(context->shader_);
-	context->draw2_ = new DrawTriangle(context->shader_);
+	context->draw2_ = new DrawDynamicTriangle(context->shader_);
 
 	*code = SUCCESS;
 

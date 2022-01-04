@@ -174,3 +174,20 @@ private:
 	uint vaos_[2];
 	uint vbos_[2];
 };
+
+class DrawDynamicTriangle:public DrawBase
+{
+public:
+
+	DrawDynamicTriangle(Shader* shader);
+	~DrawDynamicTriangle();
+
+	void Draw(DrawFun fun);
+	void Init();
+
+private:
+
+	VAOContext* vao_;
+	VBOContext* vbo_;
+};
+
