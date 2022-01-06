@@ -1,6 +1,3 @@
-#include<glad/glad.h>
-#include<GLFW/glfw3.h>
-#include<iostream>
 #include<windows/window.h>
 #include<opengl/helloworld.h>
 
@@ -13,12 +10,10 @@ void DestroyContext(Context* context);
 class Context
 {
 public:
-
 	HelloworldEnvironment* env_;
-	Shader* shader_;
 	DrawBase* draw1_;
 	DrawBase* draw2_;
-
+	ShadersManager* shaderManager_;
 };
 
 // api documents:<https://www.khronos.org/registry/OpenGL-Refpages/gl4/>
@@ -33,10 +28,10 @@ int main()
 		[](GLFWwindow* window, int width, int height) {glViewport(0, 0, width, height); });
 
 	int code = window->GetInitializeStatus();
-	if (code != (int)WINDOWSTATUS_SUCCESS) 
+	if (code != (int)EWindowStatus::WINDOWSTATUS_SUCCESS)
 	{
 		delete window;
-		return code;
+		return code; 
 	}
 	
 	Context* context = CreateContext(&code);
@@ -50,6 +45,7 @@ int main()
 
 	context->draw1_->Init();
 	context->draw2_->Init();
+
 	window->Update(Update);
 	window->UnBind();
 
@@ -83,37 +79,18 @@ void Update(GLFWwindow* window,void*context)
 
 Context* CreateContext(int* code)
 {
-
-	//坑点：
-	//不能在类对象内部调用c_str()方法，因为连一块写的话，会产生一个临时变量存住string的内容，然后这个string就会被销毁，导致内容丢失.
-	//因此需要显性的有个temp变量hold住字符串内容，然后在调用c_str()
-	std::string vs = ReadFile("../Shaders/helloworld.vs");
-	if (vs.empty()) 
-	{
-		*code = FAILED;
-		return NULL;
-	}
-
-	std::string fs = ReadFile("../Shaders/helloworld.fs");
-	if (fs.empty()) 
-	{
-		*code = FAILED;
-		return NULL;
-	}
-
 	Context* context = new Context();
-	context->shader_ = new Shader((char*)vs.c_str(), (char*)fs.c_str());
-	if (context->shader_->InitiationStatus() != SUCCESS)
-	{
-		*code = context->shader_->InitiationStatus();
-		delete context->shader_;
-		delete context;
-		return NULL;
-	}
+	context->shaderManager_ = new ShadersManager();
+	
+	ShadersManager* sm = context->shaderManager_;
 
+	//这里需要判定，懒得写了
+	sm->CreateShader("helloWorld", "../Shaders/helloworld.vs", "../Shaders/helloworld.fs");
+	sm->CreateShader("texture", "../Shaders/textures.vs", "../Shaders/textures.fs");
+	
 	context->env_ = new HelloworldGradientEnvironment();
-	context->draw1_ = new DrawTwoTriangleUseDiffVAOandVBO(context->shader_);
-	context->draw2_ = new DrawDynamicTriangle(context->shader_);
+	context->draw1_ = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
+	context->draw2_ = new DrawRectangle((*sm)["texture"]);
 
 	*code = SUCCESS;
 
@@ -122,12 +99,10 @@ Context* CreateContext(int* code)
 
 void DestroyContext(Context* context) 
 {
-	delete context->env_;
-
-	delete context->draw1_;
-	delete context->draw2_;
-
-	delete context->shader_;
-
+	if (!context) return;
+	if (context->env_) delete context->env_;
+	if (context->draw1_) delete context->draw1_;
+	if (context->draw2_) delete context->draw2_;
+	if (context->shaderManager_) delete context->shaderManager_;
 	delete context;
 }

@@ -1,6 +1,6 @@
 #include<iostream>
-
 #include <opengl/helloworld.h>
+#include<stb/stb_image.h>
 
 void HelloworldEnvironment::Background(GLFWwindow *window)
 {
@@ -131,6 +131,8 @@ DrawRectangle::DrawRectangle(Shader* shader):DrawBase(shader)
 	vao_ = new VAOContext();
 	ebo_ = new EBOContext();
 	vbo_ = new VBOContext();
+
+	glGenTextures(1, &texture_);
 }
 
 DrawRectangle::~DrawRectangle() 
@@ -145,15 +147,41 @@ void DrawRectangle::Init()
 	vao_->Bind();
 	vbo_->Bind();
 
+	//绑定纹理，告诉openGL,这个纹理是一个2d的纹理，PS:2d纹理的坐标为s t
+	glBindTexture(GL_TEXTURE_2D, texture_);
+	// 为当前绑定的纹理对象设置环绕、过滤方式
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 	float rectangleVertices[] = {
-		0.5f, 0.5f, 0.0f,1.0f,0.0f,0.0f,   // 右上角
-		0.5f, -0.5f, 0.0f,0.0f,1.0f,0.0f,  // 右下角
-		-0.5f, -0.5f, 0.0f,0.0f,0.0f,1.0f // 左下角
-		-0.5f, 0.5f, 0.0f,1.0f,0.0f,1.0f   // 左上角
+
+		//顶点位置		//颜色          // 纹理坐标
+		0.5f, 0.5f, 0.0f,1.0f,0.0f,0.0f, 1.0f, 1.0f,  // 右上角
+		0.5f, -0.5f, 0.0f,0.0f,1.0f,0.0f, 1.0f, 0.0f, // 右下角
+		-0.5f, -0.5f, 0.0f,0.0f,0.0f,1.0f, 0.0f, 0.0f, // 左下角
+		-0.5f, 0.5f, 0.0f,1.0f,0.0f,0.0f  ,0.0f, 1.0f  ,// 左上角
 	};
 
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
+	//加载纹理图片
+	int width, height, nrChannels;
+	uchar* image = stbi_load("./assets/textures/container.jpg", &width, &height, &nrChannels, 0);
 
+	if (image) 
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+
+	//将纹理数据设置好后，记得要释放
+	stbi_image_free(image);
+
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
 	vbo_->SetBufferData(sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
 	ebo_->Bind();
 
@@ -165,11 +193,16 @@ void DrawRectangle::Init()
 
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
@@ -179,6 +212,7 @@ void DrawRectangle::Draw(DrawFun fun)
 {
 	shader_->Use();
 	if (fun != NULL) fun(shader_);
+	glBindTexture(GL_TEXTURE_2D, texture_);
 	vao_->Bind();
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
@@ -475,4 +509,58 @@ void Shader::SetInt(const char* name, int value)
 {
 	int uniformID = glGetUniformLocation(programID_, name);
 	glUniform1i(uniformID, value);
+}
+
+ShadersManager::ShadersManager() 
+{
+	shaderMap_ = new std::map<std::string, Shader*>();
+}
+
+ShadersManager::~ShadersManager() 
+{
+	if (!shaderMap_->empty()) 
+	{
+		for (std::map<std::string, Shader*>::iterator i = shaderMap_->begin(); i != shaderMap_->end();i++)
+		{
+			delete i->second;
+		}
+	}
+
+	shaderMap_->clear();
+
+	delete shaderMap_;
+}
+
+bool ShadersManager::CreateShader(std::string shaderName, const char* vsPath, const char* fsPath) 
+{
+	std::map<std::string, Shader*>::iterator iter = shaderMap_->find(shaderName);
+	if (iter != shaderMap_->end()) return true;
+
+	std::string vs = ReadFile(vsPath);
+	if (vs.empty()) return false;
+	std::string fs = ReadFile(fsPath);
+	if (fs.empty()) return false;
+
+	Shader* shader = new Shader((char*)vs.c_str(), (char*)fs.c_str());
+	shaderMap_->insert(std::pair<std::string, Shader*>(shaderName, shader));
+	return true;
+}
+
+Shader* ShadersManager::GetShader(std::string shaderName)
+{
+	if (shaderMap_->empty()) return NULL;
+	std::map<std::string, Shader*>::iterator iter = shaderMap_->find(shaderName);
+	if (iter == shaderMap_->end()) return NULL;
+	return shaderMap_->operator[](shaderName);
+}
+
+bool ShadersManager::NullOrEmpty() 
+{
+	if (!shaderMap_) return true;
+	return shaderMap_->empty();
+}
+
+Shader* ShadersManager::operator[](std::string shaderName) 
+{
+	return GetShader(shaderName);
 }

@@ -25,6 +25,7 @@
     <ClInclude Include="includes\GLFW\glfw3native.h" />
     <ClInclude Include="includes\KHR\khrplatform.h" />
     <ClInclude Include="includes\opengl\helperFun.h" />
+    <ClInclude Include="includes\stb\stb_image.h" />
     <ClInclude Include="includes\windows\window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -32,6 +33,7 @@
     <ClCompile Include="src\glad\glad.c" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\opengl\helperFun.cpp" />
+    <ClCompile Include="src\std\stb_image_wrap.cpp" />
     <ClCompile Include="src\Window\window.cpp" />
   </ItemGroup>
   <ItemGroup>

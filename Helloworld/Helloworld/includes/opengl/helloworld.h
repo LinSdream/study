@@ -1,5 +1,6 @@
 #pragma once
 #include<opengl/helperFun.h>
+#include<map>
 
 class HelloworldEnvironment
 {
@@ -139,6 +140,7 @@ private:
 	VAOContext* vao_;
 	EBOContext* ebo_;
 	VBOContext* vbo_;
+	uint texture_;
 };
 
 class DrawTwoConnectTriangle :public DrawBase
@@ -191,3 +193,21 @@ private:
 	VBOContext* vbo_;
 };
 
+class ShadersManager 
+{
+public:
+
+	ShadersManager();
+	~ShadersManager();
+
+	bool CreateShader(std::string shaderName, const char* vsPath, const char* fsPath);
+	Shader* GetShader(std::string shaderName);
+	/*bool RemoveShader(std::string shaderName);
+	int GetShaderCount();*/
+	bool NullOrEmpty();
+
+	Shader* operator[](std::string shaderName);
+
+private:
+	std::map<std::string, Shader*>* shaderMap_;
+};
