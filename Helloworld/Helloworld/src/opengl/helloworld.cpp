@@ -1,19 +1,5 @@
-#include<iostream>
 #include <opengl/helloworld.h>
 #include<stb/stb_image.h>
-
-void HelloworldEnvironment::Background(GLFWwindow *window)
-{
-
-}
-
-void HelloworldEnvironment::PressInput(GLFWwindow *window) 
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) 
-	{
-		glfwSetWindowShouldClose(window, true);
-	}
-}
 
 void HelloworldGradientEnvironment::Background(GLFWwindow* window)
 {
@@ -21,61 +7,10 @@ void HelloworldGradientEnvironment::Background(GLFWwindow* window)
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
-VBOContext::VBOContext()
-{
-	glGenBuffers(1, &vbo_);
-}
-
-VBOContext::~VBOContext() 
-{
-	glDeleteBuffers(1, &vbo_);
-}
-
-void VBOContext::SetBufferData(GLsizeiptr size, const void* data, GLenum usage)
-{
-	glBufferData(GL_ARRAY_BUFFER, size, data, usage);
-}
-
-void VBOContext::Bind() 
-{
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-}
-
-VAOContext::VAOContext()
-{
-	glGenVertexArrays(1, &vao_);
-}
-
-VAOContext::~VAOContext() 
-{
-	glDeleteVertexArrays(1, &vao_);
-}
-
-void VAOContext::Bind() 
-{
-	glBindVertexArray(vao_);
-}
-
-EBOContext::EBOContext() 
-{
-	glGenBuffers(1, &ebo_);
-}
-
-EBOContext::~EBOContext() 
-{
-	glDeleteBuffers(1, &ebo_);
-}
-
-void EBOContext::Bind() 
-{
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
-}
-
 DrawTriangle::DrawTriangle(Shader* shader) :DrawBase(shader)
 {
 	vao_ = new VAOContext();
 	vbo_ = new VBOContext();
-
 }
 
 DrawTriangle::~DrawTriangle()
@@ -132,11 +67,15 @@ DrawRectangle::DrawRectangle(Shader* shader):DrawBase(shader)
 	ebo_ = new EBOContext();
 	vbo_ = new VBOContext();
 
-	glGenTextures(1, &texture_);
+	glGenTextures(1, &texture1_);
+	glGenTextures(1, &texture2_);
 }
 
 DrawRectangle::~DrawRectangle() 
 {
+	glDeleteTextures(1, &texture1_);
+	glDeleteTextures(1, &texture2_);
+
 	delete vao_;
 	delete vbo_;
 	delete ebo_;
@@ -144,27 +83,31 @@ DrawRectangle::~DrawRectangle()
 
 void DrawRectangle::Init() 
 {
+
+	float rectangleVertices[] = {
+
+		//顶点位置		//颜色          // 纹理坐标
+		0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		1.0f, 1.0f,  // 右上角
+		0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		1.0f, 0.0f, // 右下角
+		-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f, // 左下角
+		-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 1.0f  ,// 左上角
+	};
+
 	vao_->Bind();
 	vbo_->Bind();
 
+	//glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1_);
+
 	//绑定纹理，告诉openGL,这个纹理是一个2d的纹理，PS:2d纹理的坐标为s t
-	glBindTexture(GL_TEXTURE_2D, texture_);
 	// 为当前绑定的纹理对象设置环绕、过滤方式
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	float rectangleVertices[] = {
-
-		//顶点位置		//颜色          // 纹理坐标
-		0.5f, 0.5f, 0.0f,1.0f,0.0f,0.0f, 1.0f, 1.0f,  // 右上角
-		0.5f, -0.5f, 0.0f,0.0f,1.0f,0.0f, 1.0f, 0.0f, // 右下角
-		-0.5f, -0.5f, 0.0f,0.0f,0.0f,1.0f, 0.0f, 0.0f, // 左下角
-		-0.5f, 0.5f, 0.0f,1.0f,0.0f,0.0f  ,0.0f, 1.0f  ,// 左上角
-	};
-
 	//加载纹理图片
+	stbi_set_flip_vertically_on_load(true);
 	int width, height, nrChannels;
 	uchar* image = stbi_load("./assets/textures/container.jpg", &width, &height, &nrChannels, 0);
 
@@ -174,6 +117,28 @@ void DrawRectangle::Init()
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else 
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+
+	//将纹理数据设置好后，记得要释放
+	stbi_image_free(image);
+
+	//glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture2_);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	image = stbi_load("./assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
+	if (image)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
 	{
 		std::cout << "Failed to load texture" << std::endl;
 	}
@@ -206,13 +171,26 @@ void DrawRectangle::Init()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
+	//shader_->Use();
+	//shader_->SetInt("ourTexture1", 0);
+	//shader_->SetInt("ourTexture2", 1);
 }
 
 void DrawRectangle::Draw(DrawFun fun)
 {
+
+	//如果有多个纹理，需要对openGL进行定义，告诉是哪个的纹理单元。如果就一个纹理则不需要。openGL可以声明16个,0-15
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1_);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture2_);
+
 	shader_->Use();
+	shader_->SetInt("ourTexture1", 0);
+	shader_->SetInt("ourTexture2", 1);
+
 	if (fun != NULL) fun(shader_);
-	glBindTexture(GL_TEXTURE_2D, texture_);
+	
 	vao_->Bind();
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
@@ -415,152 +393,4 @@ void DrawDynamicTriangle::Draw(DrawFun fun)
 
 	vao_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 3);
-}
-
-Shader::Shader(char* vertex,char* fragment) 
-{
-	programID_ = glCreateProgram();
-
-	code_ = SUCCESS;
-
-	vertexShader_=glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader_, 1, &vertex, NULL);
-	glCompileShader(vertexShader_);
-	int success;
-	glGetShaderiv(vertexShader_, GL_COMPILE_STATUS, &success);
-	if(!success)
-	{
-		char log[512];
-		glGetShaderInfoLog(vertexShader_, 512, NULL, log);		
-		std::cout << "Create GL_VERTEX_SHADER Failed.Code:" << success << "Shader Source:" << vertex << std::endl;
-		code_ = CREATE_VERTEX_SHADER_FAILED;
-		return;
-	}
-
-	fragmentShader_ = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader_, 1, &fragment, NULL);
-	glCompileShader(fragmentShader_);
-	glGetShaderiv(fragmentShader_, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		char log[512];
-		glGetShaderInfoLog(fragmentShader_, 512, NULL, log);
-		std::cout << "Create GL_FRAGMENT_SHADER Failed.Code:" << success << "Shader Source:" << fragment << std::endl;
-		code_ = CREATE_VERTEX_SHADER_FAILED;
-		return;
-	}
-
-	glAttachShader(programID_, vertexShader_);
-	glAttachShader(programID_, fragmentShader_);
-
-	glLinkProgram(programID_);
-
-	glGetProgramiv(programID_, GL_LINK_STATUS, &success);
-	if (!success) 
-	{
-		char log[512];
-		glGetProgramInfoLog(programID_, 512, NULL, log);
-		std::cout << "Link Shader Program Failed.Code:" << success << "Info:" << log << std::endl;
-		code_ = LINKE_PROGRAME_FAILED;
-		return;
-	}
-
-	glDeleteShader(vertexShader_);
-	glDeleteShader(fragmentShader_);
-	
-}
-
-Shader::~Shader() 
-{
-	glDeleteShader(programID_);
-}
-
-void Shader::Set4f(const char* name, float x, float y, float z, float w) 
-{
-	int uniformID = glGetUniformLocation(programID_, name);
-	glUniform4f(uniformID, x, y, z, w);
-}
-
-void Shader::Set3f(const char* name, float x, float y, float z)
-{
-	int uniformID = glGetUniformLocation(programID_, name);
-	glUniform3f(uniformID, x, y, z);
-}
-
-void Shader::Set2f(const char* name, float x, float y)
-{
-	int uniformID = glGetUniformLocation(programID_, name);
-	glUniform2f(uniformID, x, y);
-}
-
-void Shader::SetFloat(const char* name, float value) 
-{
-	int uniformID = glGetUniformLocation(programID_, name);
-	glUniform1f(uniformID, value);
-}
-
-void Shader::SetBoolean(const char* name, bool value) 
-{
-	int uniformID = glGetUniformLocation(programID_, name);
-	glUniform1i(uniformID, (int)value);
-}
-
-void Shader::SetInt(const char* name, int value) 
-{
-	int uniformID = glGetUniformLocation(programID_, name);
-	glUniform1i(uniformID, value);
-}
-
-ShadersManager::ShadersManager() 
-{
-	shaderMap_ = new std::map<std::string, Shader*>();
-}
-
-ShadersManager::~ShadersManager() 
-{
-	if (!shaderMap_->empty()) 
-	{
-		for (std::map<std::string, Shader*>::iterator i = shaderMap_->begin(); i != shaderMap_->end();i++)
-		{
-			delete i->second;
-		}
-	}
-
-	shaderMap_->clear();
-
-	delete shaderMap_;
-}
-
-bool ShadersManager::CreateShader(std::string shaderName, const char* vsPath, const char* fsPath) 
-{
-	std::map<std::string, Shader*>::iterator iter = shaderMap_->find(shaderName);
-	if (iter != shaderMap_->end()) return true;
-
-	std::string vs = ReadFile(vsPath);
-	if (vs.empty()) return false;
-	std::string fs = ReadFile(fsPath);
-	if (fs.empty()) return false;
-
-	Shader* shader = new Shader((char*)vs.c_str(), (char*)fs.c_str());
-	shaderMap_->insert(std::pair<std::string, Shader*>(shaderName, shader));
-	return true;
-}
-
-Shader* ShadersManager::GetShader(std::string shaderName)
-{
-	if (shaderMap_->empty()) return NULL;
-	std::map<std::string, Shader*>::iterator iter = shaderMap_->find(shaderName);
-	if (iter == shaderMap_->end()) return NULL;
-	return shaderMap_->operator[](shaderName);
-}
-
-bool ShadersManager::NullOrEmpty() 
-{
-	if (!shaderMap_) return true;
-	return shaderMap_->empty();
-}
-
-Shader* ShadersManager::operator[](std::string shaderName) 
-{
-	return GetShader(shaderName);
 }

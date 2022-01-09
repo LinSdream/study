@@ -63,9 +63,7 @@ void Update(GLFWwindow* window,void*context)
 	c->env_->Background(window);
 	c->env_->PressInput(window);
 
-	c->draw2_->Draw([](Shader* shader) {
-		shader->SetBoolean("useOffset", false);
-		});
+	c->draw2_->Draw(NULL);
 
 	c->draw1_->Draw([](Shader* shader) {
 		shader->SetBoolean("useOffset", true);
@@ -87,7 +85,7 @@ Context* CreateContext(int* code)
 	//这里需要判定，懒得写了
 	sm->CreateShader("helloWorld", "../Shaders/helloworld.vs", "../Shaders/helloworld.fs");
 	sm->CreateShader("texture", "../Shaders/textures.vs", "../Shaders/textures.fs");
-	
+
 	context->env_ = new HelloworldGradientEnvironment();
 	context->draw1_ = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
 	context->draw2_ = new DrawRectangle((*sm)["texture"]);

@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>fs;vs;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="资源文件\shaders">
+      <UniqueIdentifier>{c18083cc-5846-40a9-a737-d6a4ed59d7d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="资源文件\assets">
+      <UniqueIdentifier>{81525494-b187-4dd1-af3b-61ad99db6fd6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\glad\glad.h">
@@ -39,6 +45,9 @@
     <ClInclude Include="includes\stb\stb_image.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="includes\opengl\base.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -59,13 +68,33 @@
     <ClCompile Include="src\std\stb_image_wrap.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\opengl\base.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\helloworld.fs">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\shaders</Filter>
     </None>
     <None Include="..\Shaders\helloworld.vs">
-      <Filter>资源文件</Filter>
+      <Filter>资源文件\shaders</Filter>
     </None>
+    <None Include="..\Shaders\textures.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="..\Shaders\textures.vs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\textures\awesomeface.png">
+      <Filter>资源文件\assets</Filter>
+    </Image>
+    <Image Include="assets\textures\container.jpg">
+      <Filter>资源文件\assets</Filter>
+    </Image>
+    <Image Include="assets\textures\wall.jpg">
+      <Filter>资源文件\assets</Filter>
+    </Image>
   </ItemGroup>
 </Project>

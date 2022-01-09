@@ -25,10 +25,12 @@
     <ClInclude Include="includes\GLFW\glfw3native.h" />
     <ClInclude Include="includes\KHR\khrplatform.h" />
     <ClInclude Include="includes\opengl\helperFun.h" />
+    <ClInclude Include="includes\opengl\base.h" />
     <ClInclude Include="includes\stb\stb_image.h" />
     <ClInclude Include="includes\windows\window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\opengl\base.cpp" />
     <ClCompile Include="src\opengl\helloworld.cpp" />
     <ClCompile Include="src\glad\glad.c" />
     <ClCompile Include="src\main.cpp" />
@@ -39,6 +41,13 @@
   <ItemGroup>
     <None Include="..\Shaders\helloworld.fs" />
     <None Include="..\Shaders\helloworld.vs" />
+    <None Include="..\Shaders\textures.fs" />
+    <None Include="..\Shaders\textures.vs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\textures\awesomeface.png" />
+    <Image Include="assets\textures\container.jpg" />
+    <Image Include="assets\textures\wall.jpg" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
