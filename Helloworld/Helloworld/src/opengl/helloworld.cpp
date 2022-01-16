@@ -86,7 +86,7 @@ void DrawRectangle::Init()
 
 	float rectangleVertices[] = {
 
-		//顶点位置		//颜色          // 纹理坐标
+		//顶点位置				//颜色				// 纹理坐标
 		0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		1.0f, 1.0f,  // 右上角
 		0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		1.0f, 0.0f, // 右下角
 		-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f, // 左下角
@@ -96,55 +96,6 @@ void DrawRectangle::Init()
 	vao_->Bind();
 	vbo_->Bind();
 
-	//glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture1_);
-
-	//绑定纹理，告诉openGL,这个纹理是一个2d的纹理，PS:2d纹理的坐标为s t
-	// 为当前绑定的纹理对象设置环绕、过滤方式
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	//加载纹理图片
-	stbi_set_flip_vertically_on_load(true);
-	int width, height, nrChannels;
-	uchar* image = stbi_load("./assets/textures/container.jpg", &width, &height, &nrChannels, 0);
-
-	if (image) 
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else 
-	{
-		std::cout << "Failed to load texture" << std::endl;
-	}
-
-	//将纹理数据设置好后，记得要释放
-	stbi_image_free(image);
-
-	//glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, texture2_);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	image = stbi_load("./assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
-	if (image)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "Failed to load texture" << std::endl;
-	}
-
-	//将纹理数据设置好后，记得要释放
-	stbi_image_free(image);
 
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
 	vbo_->SetBufferData(sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
@@ -171,9 +122,71 @@ void DrawRectangle::Init()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	//shader_->Use();
-	//shader_->SetInt("ourTexture1", 0);
-	//shader_->SetInt("ourTexture2", 1);
+	//glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1_);
+
+	//绑定纹理，告诉openGL,这个纹理是一个2d的纹理，PS:2d纹理的坐标为s t
+	// 为当前绑定的纹理对象设置环绕、过滤方式
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	//加载纹理图片
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrChannels;
+	uchar* image = stbi_load("./assets/textures/container.jpg", &width, &height, &nrChannels, 0);
+
+	if (image) 
+	{
+		//在当前的绑定纹理对象上在活动纹理单元生成纹理。
+		//glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels);
+		//target: 指定纹理的目标类型，GL_TEXTURE_1D,GL_TEDTURE_2D,GL_TEXTURE_3D
+		//level:  指定多级渐远纹理的级别。0为基本图像级别。n表示第n个mipmap的缩小图片
+		//internalFormat: 指定纹理储存的格式，例如突变只有RGB就存储为RGB值。
+		//width:  指定纹理的宽度
+		//height: 指定纹理图片的高度，或者纹理数组中的层数
+		//border: 必须为0，api的历史遗留问题
+		//format: 指定原图的数据格式，例如原图只有RGB,那这里就是RGB,如果对于有alpha通道切需要的png图片这里采用GL_RGBA
+		//type:   指定原图的数据类型
+		//data:	  图片数据指针
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		//生成纹理
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+
+	//将纹理数据设置好后，记得要释放
+	stbi_image_free(image);
+
+	//glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture2_);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	image = stbi_load("./assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
+	if (image)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+
+	//将纹理数据设置好后，记得要释放
+	stbi_image_free(image);
+
+	shader_->Use();
+	shader_->SetInt("ourTexture1", 0);
+	shader_->SetInt("ourTexture2", 1);
 }
 
 void DrawRectangle::Draw(DrawFun fun)
@@ -186,8 +199,8 @@ void DrawRectangle::Draw(DrawFun fun)
 	glBindTexture(GL_TEXTURE_2D, texture2_);
 
 	shader_->Use();
-	shader_->SetInt("ourTexture1", 0);
-	shader_->SetInt("ourTexture2", 1);
+	//shader_->SetInt("ourTexture1", 0);
+	//shader_->SetInt("ourTexture2", 1);
 
 	if (fun != NULL) fun(shader_);
 	

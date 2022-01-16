@@ -1,10 +1,10 @@
 #version 330 core
-layout (location = 0) in vec3 aPos;//位置变量的属性位置值为0
-layout (location = 1) in vec3 aColor;//颜色变量的属性位置值为1
-layout (location = 2) in vec2 aTexCoord;//纹理坐标
+layout (location = 0) in vec3 aPos;//位锟矫憋拷锟斤拷锟斤拷锟斤拷锟斤拷位锟斤拷值为0
+layout (location = 1) in vec3 aColor;//锟斤拷色锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷位锟斤拷值为1
+layout (location = 2) in vec2 aTexCoord;//锟斤拷锟斤拷锟斤拷锟斤拷
 uniform vec3 aPosXYZ;
-out vec4 ourColor;//为片段着色器指定一个颜色输入
-uniform bool useOffset;//是否使用自定义位置
+out vec3 ourColor;//为片锟斤拷锟斤拷色锟斤拷指锟斤拷一锟斤拷锟斤拷色锟斤拷锟斤拷
+uniform bool useOffset;//锟角凤拷使锟斤拷锟皆讹拷锟斤拷位锟斤拷
 out vec2 texCoord;
 
 void main()
@@ -25,9 +25,9 @@ void main()
     }
     else
     {
-        temp = vec4(aPos,1.0);//将一个vec3作为vec4的构造器的参数
+        temp = vec4(aPos,1.0);//锟斤拷一锟斤拷vec3锟斤拷为vec4锟侥癸拷锟斤拷锟斤拷锟侥诧拷锟斤拷
     }
     gl_Position = temp;
-    ourColor = vec4(aColor,1.0);
-    texCoord = aTexCoord;
+    ourColor = aColor;
+    texCoord = vec2(aTexCoord.x,aTexCoord.y);
 }

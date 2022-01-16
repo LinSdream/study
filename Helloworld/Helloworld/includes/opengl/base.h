@@ -11,7 +11,6 @@ public:
 	virtual void PressInput(GLFWwindow* window);
 };
 
-
 class VBOContext
 {
 

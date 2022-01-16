@@ -63,7 +63,10 @@ void Update(GLFWwindow* window,void*context)
 	c->env_->Background(window);
 	c->env_->PressInput(window);
 
-	c->draw2_->Draw(NULL);
+	c->draw2_->Draw([](Shader* shader) {
+		//矩阵点乘控制纹理朝向，可以去复习线代了！！！
+		shader->Set2f("towards", -1.0f, -1.0f);
+		});
 
 	c->draw1_->Draw([](Shader* shader) {
 		shader->SetBoolean("useOffset", true);
