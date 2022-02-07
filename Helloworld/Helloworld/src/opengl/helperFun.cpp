@@ -59,3 +59,10 @@ std::string ReadFile(const char* path)
 		return EMPTY_STR;
 	}
 }
+
+float Clamp01(float value) 
+{
+	if (value >= 1.0f) return 1.0f;
+	if (value <= 0.0f) return 0.0f;
+	return value;
+}

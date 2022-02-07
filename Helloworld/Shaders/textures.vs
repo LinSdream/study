@@ -2,10 +2,12 @@
 layout (location = 0) in vec3 aPos;//λ�ñ���������λ��ֵΪ0
 layout (location = 1) in vec3 aColor;//��ɫ����������λ��ֵΪ1
 layout (location = 2) in vec2 aTexCoord;//��������
+layout (location = 3) in vec2 aTexCoord2;
 uniform vec3 aPosXYZ;
 out vec3 ourColor;//ΪƬ����ɫ��ָ��һ����ɫ����
 uniform bool useOffset;//�Ƿ�ʹ���Զ���λ��
-out vec2 texCoord;
+out vec2 texCoord1;
+out vec2 texCoord2;
 
 void main()
 {
@@ -29,5 +31,6 @@ void main()
     }
     gl_Position = temp;
     ourColor = aColor;
-    texCoord = vec2(aTexCoord.x,aTexCoord.y);
+    texCoord1 = vec2(aTexCoord.x,aTexCoord.y);
+    texCoord2 = vec2(aTexCoord2.x,aTexCoord2.y);
 }

@@ -11,6 +11,7 @@ void HelloworldEnvironment::PressInput(GLFWwindow* window)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
+
 }
 
 VBOContext::VBOContext()
@@ -235,4 +236,21 @@ bool ShadersManager::RemoveShader(std::string shaderName)
 	if (iter->second) delete iter->second;
 	shaderMap_->erase(iter);
 	return true;
+}
+
+void ShadersManager::Recycle(Shader* shader) 
+{
+	if (shader == NULL) return;
+	if (shaderMap_ == NULL || shaderMap_->empty())
+	{
+		delete shader;
+		return;
+	}
+	for (sshaderMap::iterator i = shaderMap_->begin(); i != shaderMap_->end(); i++) 
+	{
+		if (i->second != shader) continue;
+		delete shader;
+		shaderMap_->erase(i);
+		return;
+	}
 }

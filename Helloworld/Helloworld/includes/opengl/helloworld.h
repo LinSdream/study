@@ -16,7 +16,7 @@ public :
 	~DrawTriangle();
 
 	void Draw(DrawFun fun);
-	void Init();
+	void Init(const void* vertices, int size);
 
 private:
 
@@ -33,7 +33,7 @@ public:
 	~DrawRectangle();
 
 	void Draw(DrawFun fun);
-	void Init();
+	void Init(const void* vertices,int size);
 
 private:
 
@@ -69,7 +69,7 @@ public:
 	~DrawTwoTriangleUseDiffVAOandVBO();
 
 	void Draw(DrawFun fun);
-	void Init();
+	void Init(const void* vertices,int size);
 
 private:
 

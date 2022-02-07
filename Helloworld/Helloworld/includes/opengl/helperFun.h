@@ -15,6 +15,7 @@
 #endif
 
 #define EMPTY_STR ""
+#define NEW_DEL MySpace::NewDelegate
 
 constexpr int SUCCESS = 0x0000;
 constexpr int UNKNOWN = 0x0065;
@@ -31,6 +32,9 @@ typedef unsigned char uchar;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 std::string ReadFile(const char* path);
+
+float Clamp01(float value);
+
 
 /////解绑缓冲区，会将为当前绑定的缓冲区重置为类似NULL的状态
 //void UnBindBuffer();

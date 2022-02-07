@@ -16,8 +16,36 @@ public:
 	ShadersManager* shaderManager_;
 };
 
-// api documents:<https://www.khronos.org/registry/OpenGL-Refpages/gl4/>
+
+void Say() 
+{
+	printf("!!!!!!!!!");
+}
+
+class A 
+{
+public:
+	void Say() { printf("AAAAAAAAAAAA"); }
+};
+
+
 int main() 
+{
+#ifdef _DEBUG
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif // _DEBUG
+
+	MySpace::Delegate say;
+	say += NEW_DEL(Say);
+	A* a = new A();
+	say += NEW_DEL(a, &A::Say);
+
+	say();
+
+}
+
+// api documents:<https://www.khronos.org/registry/OpenGL-Refpages/gl4/>
+int main1() 
 {
 
 #ifdef _DEBUG
@@ -43,8 +71,30 @@ int main()
 
 	window->Bind(context);
 
-	context->draw1_->Init();
-	context->draw2_->Init();
+	float vertices[] = {
+		//位置				//颜色
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
+		0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
+	};
+
+	float rectangleVertices[] = {
+
+		////顶点位置				//颜色				// 纹理坐标
+		//0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		2.0f, 2.0f,		0.3f, 0.3f,// 右上角
+		//0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		2.0f, 0.0f,		0.3f, 0.0f,// 右下角
+		//-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f,		0.0f, 0.0f,// 左下角
+		//-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 2.0f,		0.0f, 0.1f,// 左上角
+
+		//顶点位置				//颜色				// 纹理坐标
+		0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		2.0f, 2.0f,		1.0f, 1.0f,// 右上角
+		0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		2.0f, 0.0f,		1.0f, 0.0f,// 右下角
+		-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f,		0.0f, 0.0f,// 左下角
+		-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 2.0f,		0.0f, 1.0f,// 左上角
+	};
+
+	context->draw1_->Init(vertices,sizeof(vertices));
+	context->draw2_->Init(rectangleVertices, sizeof(rectangleVertices));
 
 	window->Update(Update);
 	window->UnBind();
@@ -66,6 +116,7 @@ void Update(GLFWwindow* window,void*context)
 	c->draw2_->Draw([](Shader* shader) {
 		//矩阵点乘控制纹理朝向，可以去复习线代了！！！
 		shader->Set2f("towards", -1.0f, -1.0f);
+		shader->SetFloat("visibility", Clamp01(0.5f));
 		});
 
 	c->draw1_->Draw([](Shader* shader) {

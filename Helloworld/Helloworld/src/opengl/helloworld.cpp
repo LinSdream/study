@@ -19,19 +19,19 @@ DrawTriangle::~DrawTriangle()
 	delete vbo_;
 }
 
-void DrawTriangle::Init()
+void DrawTriangle::Init(const void* vertices, int size)
 {
 	vao_->Bind();
 	vbo_->Bind();
 
-	float vertices[] = {
-		//位置				//颜色
-		-0.1f, -0.1f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
-		0.1f, -0.1f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
-		0.0f,  0.1f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
-	};
+	//float vertices[] = {
+	//	//位置				//颜色
+	//	-0.1f, -0.1f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
+	//	0.1f, -0.1f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
+	//	0.0f,  0.1f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
+	//};
 
-	vbo_->SetBufferData(sizeof(vertices), vertices, GL_STATIC_DRAW);
+	vbo_->SetBufferData(size, vertices, GL_STATIC_DRAW);
 
 	//参考文档<https://learnopengl-cn.github.io/01%20Getting%20started/05%20Shaders/#_5>
 	//简单来说就是传递进去的数组只是一组一维的数据，而实际情况下，这数据是有多重含义的，所以就需要去指定解释各个数据的含义
@@ -81,24 +81,31 @@ DrawRectangle::~DrawRectangle()
 	delete ebo_;
 }
 
-void DrawRectangle::Init() 
+void DrawRectangle::Init(const void* vertices,int size) 
 {
 
-	float rectangleVertices[] = {
-
-		//顶点位置				//颜色				// 纹理坐标
-		0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		1.0f, 1.0f,  // 右上角
-		0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		1.0f, 0.0f, // 右下角
-		-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f, // 左下角
-		-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 1.0f  ,// 左上角
-	};
-
+	
 	vao_->Bind();
 	vbo_->Bind();
 
+	float rectangleVertices[] = {
+
+		////顶点位置				//颜色				// 纹理坐标
+		//0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		2.0f, 2.0f,		0.3f, 0.3f,// 右上角
+		//0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		2.0f, 0.0f,		0.3f, 0.0f,// 右下角
+		//-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f,		0.0f, 0.0f,// 左下角
+		//-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 2.0f,		0.0f, 0.1f,// 左上角
+
+		//顶点位置				//颜色				// 纹理坐标
+		0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		2.0f, 2.0f,		1.0f, 1.0f,// 右上角
+		0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		2.0f, 0.0f,		1.0f, 0.0f,// 右下角
+		-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f,		0.0f, 0.0f,// 左下角
+		-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 2.0f,		0.0f, 1.0f,// 左上角
+	};
 
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
-	vbo_->SetBufferData(sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+	//vbo_->SetBufferData(size, vertices, GL_STATIC_DRAW);
 	ebo_->Bind();
 
 	//两个三角形的顶点位置
@@ -109,15 +116,17 @@ void DrawRectangle::Init()
 
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(8 * sizeof(float)));
+	glEnableVertexAttribArray(3);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -147,7 +156,7 @@ void DrawRectangle::Init()
 		//width:  指定纹理的宽度
 		//height: 指定纹理图片的高度，或者纹理数组中的层数
 		//border: 必须为0，api的历史遗留问题
-		//format: 指定原图的数据格式，例如原图只有RGB,那这里就是RGB,如果对于有alpha通道切需要的png图片这里采用GL_RGBA
+		//format: 指定原图的数据格式，例如原图只有RGB,那这里就是RGB,如果对于有alpha通道切需要的png图片这里采用GL_RGBA	
 		//type:   指定原图的数据类型
 		//data:	  图片数据指针
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
@@ -165,10 +174,10 @@ void DrawRectangle::Init()
 	//glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texture2_);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	image = stbi_load("./assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
 	if (image)
@@ -277,15 +286,15 @@ DrawTwoTriangleUseDiffVAOandVBO::~DrawTwoTriangleUseDiffVAOandVBO()
 	glDeleteVertexArrays(2, vaos_);
 }
 
-void DrawTwoTriangleUseDiffVAOandVBO::Init() 
+void DrawTwoTriangleUseDiffVAOandVBO::Init(const void* vertices,int size)
 {
 
-	float vertices[] = {
-		//位置				//颜色
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
-		0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
-	};
+	//float vertices[] = {
+	//	//位置				//颜色
+	//	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
+	//	0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
+	//	0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
+	//};
 
 	float secondVertices[] = {
 		0.0f, 0.0f, 0.0f,0.0f, 0.0f, 1.0f,// left
@@ -295,7 +304,7 @@ void DrawTwoTriangleUseDiffVAOandVBO::Init()
 	glBindBuffer(GL_ARRAY_BUFFER, vbos_[0]);
 	glBindVertexArray(vaos_[0]);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
