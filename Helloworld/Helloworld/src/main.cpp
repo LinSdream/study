@@ -14,6 +14,7 @@ public:
 	DrawBase* draw1_;
 	DrawBase* draw2_;
 	ShadersManager* shaderManager_;
+	float visibilityValue_;
 };
 
 
@@ -28,24 +29,8 @@ public:
 	void Say() { printf("AAAAAAAAAAAA"); }
 };
 
-
-int main() 
-{
-#ifdef _DEBUG
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif // _DEBUG
-
-	MySpace::Delegate say;
-	say += NEW_DEL(Say);
-	A* a = new A();
-	say += NEW_DEL(a, &A::Say);
-
-	say();
-
-}
-
 // api documents:<https://www.khronos.org/registry/OpenGL-Refpages/gl4/>
-int main1() 
+int main() 
 {
 
 #ifdef _DEBUG
@@ -113,13 +98,21 @@ void Update(GLFWwindow* window,void*context)
 	c->env_->Background(window);
 	c->env_->PressInput(window);
 
-	c->draw2_->Draw([](Shader* shader) {
+	c->draw2_->Draw([&](Shader* shader) -> void {
 		//矩阵点乘控制纹理朝向，可以去复习线代了！！！
 		shader->Set2f("towards", -1.0f, -1.0f);
-		shader->SetFloat("visibility", Clamp01(0.5f));
+
+		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+			c->visibilityValue_ += 0.1f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+			c->visibilityValue_ -= 0.1f;
+		}
+
+		shader->SetFloat("visibility", Clamp01(c->visibilityValue_));
 		});
 
-	c->draw1_->Draw([](Shader* shader) {
+	c->draw1_->Draw([&](Shader* shader) {
 		shader->SetBoolean("useOffset", true);
 		float time = glfwGetTime();
 		float valueX = sin(time);

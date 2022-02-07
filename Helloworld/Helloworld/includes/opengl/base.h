@@ -240,22 +240,7 @@ private:
 	uint fragmentShader_;
 };
 
-typedef void (*DrawFun)(Shader* shader);
 
-class DrawBase
-{
-public:
-
-	DrawBase(Shader* shader) { shader_ = shader; }
-	virtual ~DrawBase() {}
-
-	virtual void Init(const void* vertices,int size) = 0;
-	virtual void Draw(DrawFun fun) = 0;
-
-protected:
-
-	Shader* shader_;
-};
 
 
 typedef std::map<std::string, Shader*> sshaderMap;

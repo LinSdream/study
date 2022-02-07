@@ -53,7 +53,7 @@ void DrawTriangle::Init(const void* vertices, int size)
 	glBindVertexArray(0);
 }
 
-void DrawTriangle::Draw(DrawFun fun)
+void DrawTriangle::Draw(std::function<void(Shader* shader)> fun)
 {
 	shader_->Use();
 	if (fun != NULL) fun(shader_);
@@ -198,7 +198,7 @@ void DrawRectangle::Init(const void* vertices,int size)
 	shader_->SetInt("ourTexture2", 1);
 }
 
-void DrawRectangle::Draw(DrawFun fun)
+void DrawRectangle::Draw(std::function<void(Shader* shader)> fun)
 {
 
 	//如果有多个纹理，需要对openGL进行定义，告诉是哪个的纹理单元。如果就一个纹理则不需要。openGL可以声明16个,0-15
@@ -266,7 +266,7 @@ void DrawTwoConnectTriangle::Init()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void DrawTwoConnectTriangle::Draw(DrawFun fun)
+void DrawTwoConnectTriangle::Draw(std::function<void(Shader* shader)> fun)
 {
 	shader_->Use();
 	if (fun != NULL) fun(shader_);
@@ -324,7 +324,7 @@ void DrawTwoTriangleUseDiffVAOandVBO::Init(const void* vertices,int size)
 
 }
 
-void DrawTwoTriangleUseDiffVAOandVBO::Draw(DrawFun fun)
+void DrawTwoTriangleUseDiffVAOandVBO::Draw(std::function<void(Shader* shader)> fun)
 {
 	shader_->Use();
 	if (fun != NULL) fun(shader_);
@@ -355,7 +355,7 @@ void DrawDynamicTriangle::Init()
 
 }
 
-void DrawDynamicTriangle::Draw(DrawFun fun)
+void DrawDynamicTriangle::Draw(std::function<void(Shader* shader)> fun)
 {
 	vao_->Bind();
 	vbo_->Bind();

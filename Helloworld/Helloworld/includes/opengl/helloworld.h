@@ -1,10 +1,26 @@
 #pragma once
 #include<opengl/base.h>
+#include<functional>
 
 class HelloworldGradientEnvironment:public HelloworldEnvironment
 {
 public:
 	void Background(GLFWwindow* window);
+};
+
+class DrawBase
+{
+public:
+
+	DrawBase(Shader* shader) { shader_ = shader; }
+	virtual ~DrawBase() {}
+
+	virtual void Init(const void* vertices, int size) = 0;
+	virtual void Draw(std::function<void(Shader* shader)> fun) = 0;
+
+protected:
+
+	Shader* shader_;
 };
 
 class DrawTriangle:public DrawBase
@@ -15,7 +31,7 @@ public :
 	DrawTriangle(Shader* shader);
 	~DrawTriangle();
 
-	void Draw(DrawFun fun);
+	void Draw(std::function<void(Shader* shader)> fun);
 	void Init(const void* vertices, int size);
 
 private:
@@ -32,7 +48,7 @@ public:
 	DrawRectangle(Shader* shader);
 	~DrawRectangle();
 
-	void Draw(DrawFun fun);
+	void Draw(std::function<void(Shader* shader)> fun);
 	void Init(const void* vertices,int size);
 
 private:
@@ -51,7 +67,7 @@ public:
 	DrawTwoConnectTriangle(Shader* shader);
 	~DrawTwoConnectTriangle();
 	
-	void Draw(DrawFun fun);
+	void Draw(std::function<void(Shader* shader)> fun);
 	void Init();
 
 private:
@@ -68,7 +84,7 @@ public:
 	DrawTwoTriangleUseDiffVAOandVBO(Shader* shader);
 	~DrawTwoTriangleUseDiffVAOandVBO();
 
-	void Draw(DrawFun fun);
+	void Draw(std::function<void(Shader* shader)> fun);
 	void Init(const void* vertices,int size);
 
 private:
@@ -84,7 +100,7 @@ public:
 	DrawDynamicTriangle(Shader* shader);
 	~DrawDynamicTriangle();
 
-	void Draw(DrawFun fun);
+	void Draw(std::function<void(Shader* shader)> fun);
 	void Init();
 
 private:
