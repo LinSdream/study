@@ -6,6 +6,7 @@ layout (location = 3) in vec2 aTexCoord2;
 uniform vec3 aPosXYZ;
 out vec3 ourColor;//ΪƬ����ɫ��ָ��һ����ɫ����
 uniform bool useOffset;//�Ƿ�ʹ���Զ���λ��
+uniform mat4 transform;
 out vec2 texCoord1;
 out vec2 texCoord2;
 
@@ -29,7 +30,7 @@ void main()
     {
         temp = vec4(aPos,1.0);//��һ��vec3��Ϊvec4�Ĺ������Ĳ���
     }
-    gl_Position = temp;
+    gl_Position = transform*temp ;
     ourColor = aColor;
     texCoord1 = vec2(aTexCoord.x,aTexCoord.y);
     texCoord2 = vec2(aTexCoord2.x,aTexCoord2.y);

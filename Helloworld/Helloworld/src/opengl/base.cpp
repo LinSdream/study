@@ -159,6 +159,14 @@ void Shader::SetInt(const char* name, int value)
 	glUniform1i(uniformID, value);
 }
 
+void Shader::SetMatrix4fv(const char* name, int matrixCount, GLboolean transpose, const float* value)
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	//matrixCount:参数表示要发送给OpenGL多少个的举证
+	//trnaspose: 表示是否对矩阵进行置换（行列交换）
+	glUniformMatrix4fv(uniformID, matrixCount, transpose, value);
+}
+
 ShadersManager::ShadersManager()
 {
 	shaderMap_ = NULL;

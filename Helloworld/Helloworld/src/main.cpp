@@ -7,27 +7,7 @@ void Update(GLFWwindow* window, void* context);
 Context* CreateContext(int* code);
 void DestroyContext(Context* context);
 
-class Context
-{
-public:
-	HelloworldEnvironment* env_;
-	DrawBase* draw1_;
-	DrawBase* draw2_;
-	ShadersManager* shaderManager_;
-	float visibilityValue_;
-};
 
-
-void Say() 
-{
-	printf("!!!!!!!!!");
-}
-
-class A 
-{
-public:
-	void Say() { printf("AAAAAAAAAAAA"); }
-};
 
 // api documents:<https://www.khronos.org/registry/OpenGL-Refpages/gl4/>
 int main() 
@@ -94,31 +74,15 @@ int main()
 void Update(GLFWwindow* window,void*context) 
 {
 	Context *c= (Context*)context;
+	c->window_ = window;
 
 	c->env_->Background(window);
 	c->env_->PressInput(window);
 
-	c->draw2_->Draw([&](Shader* shader) -> void {
-		//矩阵点乘控制纹理朝向，可以去复习线代了！！！
-		shader->Set2f("towards", -1.0f, -1.0f);
+	float time = glfwGetTime();
 
-		if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-			c->visibilityValue_ += 0.1f;
-		}
-		if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-			c->visibilityValue_ -= 0.1f;
-		}
-
-		shader->SetFloat("visibility", Clamp01(c->visibilityValue_));
-		});
-
-	c->draw1_->Draw([&](Shader* shader) {
-		shader->SetBoolean("useOffset", true);
-		float time = glfwGetTime();
-		float valueX = sin(time);
-		float valueY = cos(time);
-		shader->Set3f("aPosXYZ", valueX, valueY, 0.0f);
-		});
+	c->draw2_->Draw(context);
+	c->draw1_->Draw(context);
 	
 }
 
@@ -135,7 +99,7 @@ Context* CreateContext(int* code)
 
 	context->env_ = new HelloworldGradientEnvironment();
 	context->draw1_ = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
-	context->draw2_ = new DrawRectangle((*sm)["texture"]);
+	context->draw2_ = new Draw3D((*sm)["texture"]);
 
 	*code = SUCCESS;
 

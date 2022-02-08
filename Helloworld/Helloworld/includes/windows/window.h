@@ -1,12 +1,13 @@
 #pragma once
+#include<opengl/base.h>
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
 #include<functional>
 
-typedef  std::function<void(GLFWwindow* window, void* obj)> RelRenderFun;
+typedef  std::function<void(GLFWwindow* window,void* obj)> RelRenderFun;
 typedef void(*FramebuffSizeCallback)(GLFWwindow* window, int wight, int height);
 
-class Window 
+class Window
 {
 
 public:

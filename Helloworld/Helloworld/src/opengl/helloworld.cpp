@@ -1,5 +1,8 @@
 #include <opengl/helloworld.h>
+#include<opengl/helperFun.h>
 #include<stb/stb_image.h>
+
+
 
 void HelloworldGradientEnvironment::Background(GLFWwindow* window)
 {
@@ -53,10 +56,9 @@ void DrawTriangle::Init(const void* vertices, int size)
 	glBindVertexArray(0);
 }
 
-void DrawTriangle::Draw(std::function<void(Shader* shader)> fun)
+void DrawTriangle::Draw(const void* context)
 {
 	shader_->Use();
-	if (fun != NULL) fun(shader_);
 	vao_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
@@ -69,6 +71,8 @@ DrawRectangle::DrawRectangle(Shader* shader):DrawBase(shader)
 
 	glGenTextures(1, &texture1_);
 	glGenTextures(1, &texture2_);
+
+	visibilityValue_ = 0.0f;
 }
 
 DrawRectangle::~DrawRectangle() 
@@ -84,24 +88,8 @@ DrawRectangle::~DrawRectangle()
 void DrawRectangle::Init(const void* vertices,int size) 
 {
 
-	
 	vao_->Bind();
 	vbo_->Bind();
-
-	float rectangleVertices[] = {
-
-		////顶点位置				//颜色				// 纹理坐标
-		//0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		2.0f, 2.0f,		0.3f, 0.3f,// 右上角
-		//0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		2.0f, 0.0f,		0.3f, 0.0f,// 右下角
-		//-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f,		0.0f, 0.0f,// 左下角
-		//-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 2.0f,		0.0f, 0.1f,// 左上角
-
-		//顶点位置				//颜色				// 纹理坐标
-		0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		2.0f, 2.0f,		1.0f, 1.0f,// 右上角
-		0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		2.0f, 0.0f,		1.0f, 0.0f,// 右下角
-		-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f,		0.0f, 0.0f,// 左下角
-		-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 2.0f,		0.0f, 1.0f,// 左上角
-	};
 
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
 	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
@@ -198,7 +186,7 @@ void DrawRectangle::Init(const void* vertices,int size)
 	shader_->SetInt("ourTexture2", 1);
 }
 
-void DrawRectangle::Draw(std::function<void(Shader* shader)> fun)
+void DrawRectangle::Draw(const void* context)
 {
 
 	//如果有多个纹理，需要对openGL进行定义，告诉是哪个的纹理单元。如果就一个纹理则不需要。openGL可以声明16个,0-15
@@ -211,10 +199,37 @@ void DrawRectangle::Draw(std::function<void(Shader* shader)> fun)
 	//shader_->SetInt("ourTexture1", 0);
 	//shader_->SetInt("ourTexture2", 1);
 
-	if (fun != NULL) fun(shader_);
-	
+	float time = glfwGetTime();
+
+	shader_->Set2f("towards", -1.0f, -1.0f);
+	Context* c= (Context*)context;
+	if (glfwGetKey(c->window_, GLFW_KEY_UP) == GLFW_PRESS) {
+		c->visibilityValue_ += 0.1f;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		c->visibilityValue_ -= 0.1f;
+	}
+
+	shader_->SetFloat("visibility", Clamp01(c->visibilityValue_));
+	glm::mat4 trans = glm::mat4(1.0f);
+
+	trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+
+	trans = glm::rotate(trans, time, glm::vec3(0, 0, 1.0f));
+	shader_->SetMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(trans));
+
 	vao_->Bind();
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
+	float value = sin(time);
+	trans = glm::scale(trans, glm::vec3(1.0f,1.0f, 1.0f) * Abs(value));
+	trans = glm::rotate(trans, time, glm::vec3(0.0f, 1.0f, 0.0f));
+	shader_->SetMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(trans));
+
+	vao_->Bind();
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 }
 
 DrawTwoConnectTriangle::DrawTwoConnectTriangle(Shader* shader):DrawBase(shader)
@@ -266,10 +281,9 @@ void DrawTwoConnectTriangle::Init()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void DrawTwoConnectTriangle::Draw(std::function<void(Shader* shader)> fun)
+void DrawTwoConnectTriangle::Draw(const void* context)
 {
 	shader_->Use();
-	if (fun != NULL) fun(shader_);
 	vao_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 9);
 }
@@ -324,11 +338,17 @@ void DrawTwoTriangleUseDiffVAOandVBO::Init(const void* vertices,int size)
 
 }
 
-void DrawTwoTriangleUseDiffVAOandVBO::Draw(std::function<void(Shader* shader)> fun)
+void DrawTwoTriangleUseDiffVAOandVBO::Draw(const void* context)
 {
 	shader_->Use();
-	if (fun != NULL) fun(shader_);
 	glBindVertexArray(vaos_[0]);
+
+	shader_->SetBoolean("useOffset", true);
+	float time = glfwGetTime();
+	float valueX = sin(time);
+	float valueY = cos(time);
+	shader_->Set3f("aPosXYZ", valueX, valueY, 0.0f);
+
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -355,7 +375,7 @@ void DrawDynamicTriangle::Init()
 
 }
 
-void DrawDynamicTriangle::Draw(std::function<void(Shader* shader)> fun)
+void DrawDynamicTriangle::Draw(const void* context)
 {
 	vao_->Bind();
 	vbo_->Bind();
@@ -411,8 +431,143 @@ void DrawDynamicTriangle::Draw(std::function<void(Shader* shader)> fun)
 	vbo_->Bind();
 
 	shader_->Use();
-	if (fun != NULL) fun(shader_);
+
+	float valueX = sin(time);
+	float valueY = cos(time);
+
+	shader_->SetBoolean("useOffset", true);
+	shader_->Set3f("aPosXYZ", valueX, valueY, 0.0f);
 
 	vao_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+
+Draw3D::Draw3D(Shader* shader) :DrawBase(shader)
+{
+	vao_ = new VAOContext();
+	ebo_ = new EBOContext();
+	vbo_ = new VBOContext();
+
+	glGenTextures(1, &texture1_);
+	glGenTextures(1, &texture2_);
+}
+
+Draw3D::~Draw3D()
+{
+	glDeleteTextures(1, &texture1_);
+	glDeleteTextures(1, &texture2_);
+
+	delete vao_;
+	delete ebo_;
+	delete vbo_;
+}
+
+void Draw3D::Init(const void* vertices, int size)
+{
+	vao_->Bind();
+	vbo_->Bind();
+
+	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_DYNAMIC_DRAW);
+
+	ebo_->Bind();
+
+	uint indices[] =
+	{
+		0,1,3,
+		1,2,3,
+	};
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(8 * sizeof(float)));
+	glEnableVertexAttribArray(3);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	//绑定纹理
+	glBindTexture(GL_TEXTURE_2D, texture1_);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrChannels;
+	uchar* image = stbi_load("./assets/textures/container.jpg", &width, &height, &nrChannels, 0);
+	if (image)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(image);
+
+	glBindTexture(GL_TEXTURE_2D, texture2_);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	image = stbi_load("./assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
+	if (image)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(image);
+
+	shader_->Use();
+	shader_->SetInt("ourTexture1", 0);
+	shader_->SetInt("ourTexture2", 1);
+}
+
+void Draw3D::Draw(const void* context)
+{
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1_);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture2_);
+
+	shader_->Use();
+	float time = glfwGetTime();
+
+	shader_->Set2f("towards", -1.0f, -1.0f);
+	Context* c = (Context*)context;
+	if (glfwGetKey(c->window_, GLFW_KEY_UP) == GLFW_PRESS) {
+		c->visibilityValue_ += 0.1f;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		c->visibilityValue_ -= 0.1f;
+	}
+
+	shader_->SetFloat("visibility", Clamp01(c->visibilityValue_));
+	glm::mat4 trans = glm::mat4(1.0f);
+
+	trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+
+	trans = glm::rotate(trans, time, glm::vec3(0, 0, 1.0f));
+	shader_->SetMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(trans));
+
+	vao_->Bind();
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 }

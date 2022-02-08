@@ -66,3 +66,8 @@ float Clamp01(float value)
 	if (value <= 0.0f) return 0.0f;
 	return value;
 }
+
+float Abs(float value)
+{
+	return value < 0.0f ? -value : value;
+}

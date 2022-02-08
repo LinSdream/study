@@ -1,12 +1,17 @@
 #pragma once
 #include<opengl/base.h>
 #include<functional>
+#include<glm/glm.hpp>
+#include<glm/gtc/matrix_transform.hpp>
+#include<glm/gtc/type_ptr.hpp>
 
 class HelloworldGradientEnvironment:public HelloworldEnvironment
 {
 public:
 	void Background(GLFWwindow* window);
 };
+
+typedef std::function<void(Shader* shader)> DrawFun;
 
 class DrawBase
 {
@@ -16,12 +21,25 @@ public:
 	virtual ~DrawBase() {}
 
 	virtual void Init(const void* vertices, int size) = 0;
-	virtual void Draw(std::function<void(Shader* shader)> fun) = 0;
+	virtual void Draw(const void* context) = 0;
 
 protected:
 
 	Shader* shader_;
 };
+
+class Context
+{
+
+public:
+	HelloworldEnvironment* env_;
+	DrawBase* draw1_;
+	DrawBase* draw2_;
+	ShadersManager* shaderManager_;
+	float visibilityValue_;
+	GLFWwindow* window_;
+};
+
 
 class DrawTriangle:public DrawBase
 {
@@ -31,7 +49,7 @@ public :
 	DrawTriangle(Shader* shader);
 	~DrawTriangle();
 
-	void Draw(std::function<void(Shader* shader)> fun);
+	void Draw(const void* context);
 	void Init(const void* vertices, int size);
 
 private:
@@ -48,7 +66,7 @@ public:
 	DrawRectangle(Shader* shader);
 	~DrawRectangle();
 
-	void Draw(std::function<void(Shader* shader)> fun);
+	void Draw(const void* context);
 	void Init(const void* vertices,int size);
 
 private:
@@ -56,6 +74,28 @@ private:
 	VAOContext* vao_;
 	EBOContext* ebo_;
 	VBOContext* vbo_;
+	uint texture1_;
+	uint texture2_;
+
+	float visibilityValue_;
+};
+
+class Draw3D :public DrawBase 
+{
+public :
+
+	Draw3D(Shader* shader);
+	~Draw3D();
+
+	void Draw(const void* context);
+	void Init(const void* vertices, int size);
+
+private:
+
+	VAOContext* vao_;
+	EBOContext* ebo_;
+	VBOContext* vbo_;
+
 	uint texture1_;
 	uint texture2_;
 };
@@ -67,7 +107,7 @@ public:
 	DrawTwoConnectTriangle(Shader* shader);
 	~DrawTwoConnectTriangle();
 	
-	void Draw(std::function<void(Shader* shader)> fun);
+	void Draw(const void* context);
 	void Init();
 
 private:
@@ -84,7 +124,7 @@ public:
 	DrawTwoTriangleUseDiffVAOandVBO(Shader* shader);
 	~DrawTwoTriangleUseDiffVAOandVBO();
 
-	void Draw(std::function<void(Shader* shader)> fun);
+	void Draw(const void* context);
 	void Init(const void* vertices,int size);
 
 private:
@@ -100,7 +140,7 @@ public:
 	DrawDynamicTriangle(Shader* shader);
 	~DrawDynamicTriangle();
 
-	void Draw(std::function<void(Shader* shader)> fun);
+	void Draw(const void* context);
 	void Init();
 
 private:
