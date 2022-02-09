@@ -85,6 +85,9 @@
     <None Include="..\Shaders\textures.vs">
       <Filter>资源文件\shaders</Filter>
     </None>
+    <None Include="..\Shaders\hello3d.vs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\awesomeface.png">

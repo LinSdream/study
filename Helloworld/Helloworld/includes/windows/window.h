@@ -4,7 +4,8 @@
 #include<GLFW/glfw3.h>
 #include<functional>
 
-typedef  std::function<void(GLFWwindow* window,void* obj)> RelRenderFun;
+class Window;
+typedef  std::function<void(Window* window,GLFWwindow* wwindow, double delaTime,void* obj)> RelRenderFun;
 typedef void(*FramebuffSizeCallback)(GLFWwindow* window, int wight, int height);
 
 class Window

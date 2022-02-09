@@ -260,3 +260,8 @@ public:
 private:
 	sshaderMap* shaderMap_;
 };
+
+class Camera 
+{
+
+};

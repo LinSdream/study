@@ -113,9 +113,16 @@ void Window::UnBind()
 void Window::Update(RelRenderFun render_fun) 
 {
 
+	double delaTime = 0.0;
+	double lastFrame = 0.0f;
+
 	while (!glfwWindowShouldClose(window_)) 
 	{
-		render_fun(window_,this->context_);
+		double currentTime = glfwGetTime();
+		delaTime = currentTime - lastFrame;
+		lastFrame = currentTime;
+
+		render_fun(this, window_, delaTime,this->context_);
 
 		glfwSwapBuffers(window_);
 		glfwPollEvents();

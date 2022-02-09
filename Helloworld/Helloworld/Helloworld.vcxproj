@@ -39,6 +39,7 @@
     <ClCompile Include="src\Window\window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Shaders\hello3d.vs" />
     <None Include="..\Shaders\helloworld.fs" />
     <None Include="..\Shaders\helloworld.vs" />
     <None Include="..\Shaders\textures.fs" />
@@ -73,7 +74,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -109,8 +110,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Project\OpenGL\Helloworld\Helloworld\includes;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\Project\OpenGL\Helloworld\Helloworld\libs;$(LibraryPath)</LibraryPath>
+    <IncludePath>F:\jiumimi\study\Helloworld\Helloworld\includes;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\jiumimi\study\Helloworld\Helloworld\libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>

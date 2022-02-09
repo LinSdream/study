@@ -67,6 +67,13 @@ float Clamp01(float value)
 	return value;
 }
 
+float Clamp(float value, float max, float min) 
+{
+	if (value >= max) return max;
+	if (value <= min) return min;
+	return value;
+}
+
 float Abs(float value)
 {
 	return value < 0.0f ? -value : value;

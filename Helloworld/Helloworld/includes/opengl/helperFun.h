@@ -36,6 +36,8 @@ std::string ReadFile(const char* path);
 
 float Clamp01(float value);
 
+float Clamp(float value, float max, float min);
+
 float Abs(float value);
 
 /////解绑缓冲区，会将为当前绑定的缓冲区重置为类似NULL的状态

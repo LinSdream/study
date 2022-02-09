@@ -2,8 +2,6 @@
 #include<opengl/helperFun.h>
 #include<stb/stb_image.h>
 
-
-
 void HelloworldGradientEnvironment::Background(GLFWwindow* window)
 {
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -22,19 +20,19 @@ DrawTriangle::~DrawTriangle()
 	delete vbo_;
 }
 
-void DrawTriangle::Init(const void* vertices, int size)
+void DrawTriangle::Init()
 {
 	vao_->Bind();
 	vbo_->Bind();
 
-	//float vertices[] = {
-	//	//位置				//颜色
-	//	-0.1f, -0.1f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
-	//	0.1f, -0.1f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
-	//	0.0f,  0.1f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
-	//};
+	float vertices[] = {
+		//位置				//颜色
+		-0.1f, -0.1f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
+		0.1f, -0.1f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
+		0.0f,  0.1f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
+	};
 
-	vbo_->SetBufferData(size, vertices, GL_STATIC_DRAW);
+	vbo_->SetBufferData(sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	//参考文档<https://learnopengl-cn.github.io/01%20Getting%20started/05%20Shaders/#_5>
 	//简单来说就是传递进去的数组只是一组一维的数据，而实际情况下，这数据是有多重含义的，所以就需要去指定解释各个数据的含义
@@ -85,14 +83,28 @@ DrawRectangle::~DrawRectangle()
 	delete ebo_;
 }
 
-void DrawRectangle::Init(const void* vertices,int size) 
+void DrawRectangle::Init() 
 {
 
 	vao_->Bind();
 	vbo_->Bind();
 
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+	float rectangleVertices[] = {
+
+		////顶点位置				//颜色				// 纹理坐标
+		//0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		2.0f, 2.0f,		0.3f, 0.3f,// 右上角
+		//0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		2.0f, 0.0f,		0.3f, 0.0f,// 右下角
+		//-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f,		0.0f, 0.0f,// 左下角
+		//-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 2.0f,		0.0f, 0.1f,// 左上角
+
+		//顶点位置				//颜色				// 纹理坐标
+		0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		2.0f, 2.0f,		1.0f, 1.0f,// 右上角
+		0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		2.0f, 0.0f,		1.0f, 0.0f,// 右下角
+		-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f,		0.0f, 0.0f,// 左下角
+		-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 2.0f,		0.0f, 1.0f,// 左上角
+	};
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), rectangleVertices, GL_STATIC_DRAW);
 	//vbo_->SetBufferData(size, vertices, GL_STATIC_DRAW);
 	ebo_->Bind();
 
@@ -202,15 +214,15 @@ void DrawRectangle::Draw(const void* context)
 	float time = glfwGetTime();
 
 	shader_->Set2f("towards", -1.0f, -1.0f);
-	Context* c= (Context*)context;
+	DrawContext* c= (DrawContext*)context;
 	if (glfwGetKey(c->window_, GLFW_KEY_UP) == GLFW_PRESS) {
-		c->visibilityValue_ += 0.1f;
+		visibilityValue_ += 0.1f;
 	}
 	if (glfwGetKey(c->window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		c->visibilityValue_ -= 0.1f;
+		visibilityValue_ -= 0.1f;
 	}
 
-	shader_->SetFloat("visibility", Clamp01(c->visibilityValue_));
+	shader_->SetFloat("visibility", Clamp01(visibilityValue_));
 	glm::mat4 trans = glm::mat4(1.0f);
 
 	trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
@@ -300,15 +312,15 @@ DrawTwoTriangleUseDiffVAOandVBO::~DrawTwoTriangleUseDiffVAOandVBO()
 	glDeleteVertexArrays(2, vaos_);
 }
 
-void DrawTwoTriangleUseDiffVAOandVBO::Init(const void* vertices,int size)
+void DrawTwoTriangleUseDiffVAOandVBO::Init()
 {
+	float vertices[] = {
+		//位置				//颜色
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
+		0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
+	};
 
-	//float vertices[] = {
-	//	//位置				//颜色
-	//	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
-	//	0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
-	//	0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
-	//};
 
 	float secondVertices[] = {
 		0.0f, 0.0f, 0.0f,0.0f, 0.0f, 1.0f,// left
@@ -318,7 +330,7 @@ void DrawTwoTriangleUseDiffVAOandVBO::Init(const void* vertices,int size)
 	glBindBuffer(GL_ARRAY_BUFFER, vbos_[0]);
 	glBindVertexArray(vaos_[0]);
 
-	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
@@ -463,12 +475,84 @@ Draw3D::~Draw3D()
 	delete vbo_;
 }
 
-void Draw3D::Init(const void* vertices, int size)
+void Draw3D::Init()
 {
+
+
+	//OpenGL 通过glEnable 与 glDisable 来控制开启或关闭一些功能，直到调用对应的功能来关闭为止
+	//这里选择开启深度测试
+	glEnable(GL_DEPTH_TEST);
+
 	vao_->Bind();
 	vbo_->Bind();
 
-	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_DYNAMIC_DRAW);
+	float vertices[] = {
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+	};
+
+
+	//float vertices[] = {
+	//	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+	//	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+	//	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+	//	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+	//	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+	//	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+	//	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+	//	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+	//	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+	//	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+	//	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+	//	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+	//	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+	//	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+	//	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+	//	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 0.0f,
+	//	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+	//};
+
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
 	ebo_->Bind();
 
@@ -480,17 +564,14 @@ void Draw3D::Init(const void* vertices, int size)
 
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(6 * sizeof(float)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(8 * sizeof(float)));
-	glEnableVertexAttribArray(3);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -534,6 +615,7 @@ void Draw3D::Init(const void* vertices, int size)
 	}
 	stbi_image_free(image);
 
+
 	shader_->Use();
 	shader_->SetInt("ourTexture1", 0);
 	shader_->SetInt("ourTexture2", 1);
@@ -542,6 +624,8 @@ void Draw3D::Init(const void* vertices, int size)
 void Draw3D::Draw(const void* context)
 {
 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture1_);
 	glActiveTexture(GL_TEXTURE1);
@@ -549,25 +633,323 @@ void Draw3D::Draw(const void* context)
 
 	shader_->Use();
 	float time = glfwGetTime();
+	DrawContext* c = (DrawContext*)context;
 
-	shader_->Set2f("towards", -1.0f, -1.0f);
-	Context* c = (Context*)context;
+	// document: < https://learnopengl-cn.github.io/01%20Getting%20started/08%20Coordinate%20Systems/#_2 >
+	////创建一个模型矩阵
+	//glm::mat4 model = glm::mat4(1.0f);
+	//model = glm::rotate(model, glm::radians(50.0f)*time, glm::vec3(0.5f, 1.0f, 0.0f));
+
+	////创建一个观察矩阵
+	glm::mat4 view = glm::mat4(1.0f);
+	//矩阵要向模型矩阵位移，可以认为是一个相机
+	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+	//定义一个透视举证，使用透视投影
+	glm::mat4 projection;
+	projection = glm::perspective(glm::radians(45.0f), c->windowWidth_ / c->windowHeight_, 0.01f, 100.0f);
+
+	//shader_->SetMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+
+	//shader_->Set2f("towards", -1.0f, -1.0f);
+
 	if (glfwGetKey(c->window_, GLFW_KEY_UP) == GLFW_PRESS) {
-		c->visibilityValue_ += 0.1f;
+		visibilityValue_ += 0.1f;
 	}
 	if (glfwGetKey(c->window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		c->visibilityValue_ -= 0.1f;
+		visibilityValue_ -= 0.1f;
 	}
 
-	shader_->SetFloat("visibility", Clamp01(c->visibilityValue_));
-	glm::mat4 trans = glm::mat4(1.0f);
-
-	trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-
-	trans = glm::rotate(trans, time, glm::vec3(0, 0, 1.0f));
-	shader_->SetMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(trans));
+	shader_->SetFloat("visibility", Clamp01(visibilityValue_));
 
 	vao_->Bind();
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	for (uint i = 0; i < 10; i++) 
+	{
+		glm::mat4 model;
+		model = glm::translate(model, cubePositions_[i]);
+		float angle = 0.0f;
+		angle = 20.0f * (i + 1);
+		model = glm::rotate(model, glm::radians(angle)*time, glm::vec3(1.0f, 0.3f, 0.5f));
+		shader_->SetMatrix4fv("model",1,GL_FALSE,&model[0][0]);
+
+
+		//在OpenGL中，渲染一个物体中所有的顶点都要经过一下的空间坐标转换:局部坐标->世界坐标->观察坐标->裁剪坐标->屏幕坐标的过程，这些的过程都可以通过矩阵的变化来实现转换
+		//在OpenGL中，我们提供的坐标矩阵可到裁剪坐标即可，OpenGL会帮助我们通过使用glViewPort来标准化设备坐标到屏幕坐标
+		//裁剪坐标即：透视矩阵(裁剪空间) * 观察矩阵(观察空间) * 世界矩阵(世界空间) * 局部坐标(局部空间)  V clip = M projection * M view * M model * M local (一定要从右往左) 矩阵不符合交换律
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+}
+
+DrawCamera::DrawCamera(Shader* shader) :DrawBase(shader)
+{
+	vao_ = new VAOContext();
+	ebo_ = new EBOContext();
+	vbo_ = new VBOContext();
+
+	glGenTextures(1, &texture1_);
+	glGenTextures(1, &texture2_);
+}
+
+DrawCamera::~DrawCamera()
+{
+	glDeleteTextures(1, &texture1_);
+	glDeleteTextures(1, &texture2_);
+
+	delete vao_;
+	delete ebo_;
+	delete vbo_;
+}
+
+void DrawCamera::Init()
+{
+
+
+	//OpenGL 通过glEnable 与 glDisable 来控制开启或关闭一些功能，直到调用对应的功能来关闭为止
+	//这里选择开启深度测试
+	glEnable(GL_DEPTH_TEST);
+
+	vao_->Bind();
+	vbo_->Bind();
+
+	float vertices[] = {
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+	};
+
+
+	//float vertices[] = {
+	//	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+	//	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+	//	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+	//	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+	//	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+	//	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+	//	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+	//	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+	//	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+	//	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+	//	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+	//	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
+	//	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
+	//	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+	//	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 1.0f,
+	//	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 0.0f,
+	//	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+	//};
+
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+	ebo_->Bind();
+
+	uint indices[] =
+	{
+		0,1,3,
+		1,2,3,
+	};
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(5 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	//绑定纹理
+	glBindTexture(GL_TEXTURE_2D, texture1_);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrChannels;
+	uchar* image = stbi_load("./assets/textures/container.jpg", &width, &height, &nrChannels, 0);
+	if (image)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(image);
+
+	glBindTexture(GL_TEXTURE_2D, texture2_);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	image = stbi_load("./assets/textures/awesomeface.png", &width, &height, &nrChannels, 0);
+	if (image)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(image);
+
+
+	shader_->Use();
+	shader_->SetInt("ourTexture1", 0);
+	shader_->SetInt("ourTexture2", 1);
+}
+
+void DrawCamera::Draw(const void* context)
+{
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1_);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture2_);
+
+	shader_->Use();
+	float time = glfwGetTime();
+	DrawContext* c = (DrawContext*)context;
+
+	// document: < https://learnopengl-cn.github.io/01%20Getting%20started/09%20Camera/#_1 >
+	////创建一个模型矩阵
+	//glm::mat4 model = glm::mat4(1.0f);
+	//model = glm::rotate(model, glm::radians(50.0f)*time, glm::vec3(0.5f, 1.0f, 0.0f));
+
+
+	float radius = 10.0f;
+	float camX = sin(time) * radius;
+	float camZ = cos(time) * radius;
+
+	float cameraSpeed = cameraSpeed_ * c->delaTime_;
+
+	if (glfwGetKey(c->window_, GLFW_KEY_U) == GLFW_PRESS) {
+		visibilityValue_ += 0.1f;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_P) == GLFW_PRESS) {
+		visibilityValue_ -= 0.1f;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_W) == GLFW_PRESS) {
+		cameraPos_ += cameraSpeed * glm::normalize(cameraFront_);
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_S) == GLFW_PRESS) {
+		cameraPos_ -= cameraSpeed * glm::normalize(cameraFront_);
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_D) == GLFW_PRESS) {
+		cameraPos_ += glm::normalize(glm::cross(cameraFront_, cameraUp_)) * cameraSpeed;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
+		cameraPos_ -= glm::normalize(glm::cross(cameraFront_, cameraUp_)) * cameraSpeed;
+	}
+
+	glm::mat4 view = glm::mat4(1.0f);
+	//lookAt(eye,center,up)
+	//eye: 相机位置
+	//center:相机指向的目标位置
+	//up:世界坐标中的向上向量
+	//计算出来的矩阵就可以用来作为观察矩阵
+	view = glm::lookAt(cameraPos_, cameraPos_ + cameraFront_, cameraUp_);
+	//std::cout << "观察举证 view: \n{\n " << view[0][0] << "," << view[0][1] << "," << view[0][2] << "," << view[0][3] << ",\n"
+	//	<< view[1][0] << "," << view[1][1] << "," << view[1][2] << "," << view[1][3] << ",\n" << view[2][0] << "," << view[2][1] << "," << view[2][2] << "," << view[2][3]
+	//	<< "\n" << view[3][0] << "," << view[3][1] << "," << view[3][2] << "," << view[3][3] << "\n}";
+	//std::cout << (cameraPos_ + cameraFront_).x << "," << (cameraPos_ + cameraFront_).y << "," << (cameraPos_ + cameraFront_).z << std::endl;
+
+	glm::mat4 projection;
+	projection = glm::perspective(glm::radians(45.0f), c->windowWidth_ / c->windowHeight_, 0.01f, 100.0f);
+
+	//shader_->SetMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+
+	//shader_->Set2f("towards", -1.0f, -1.0f);
+
+	shader_->SetFloat("visibility", Clamp01(visibilityValue_));
+
+	vao_->Bind();
+
+	for (uint i = 0; i < 10; i++)
+	{
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, cubePositions_[i]);
+		float angle = 0.0f;
+		angle = 20.0f * (i + 1);
+		model = glm::rotate(model, glm::radians(angle) * time, glm::vec3(1.0f, 0.3f, 0.5f));
+		shader_->SetMatrix4fv("model", 1, GL_FALSE, &model[0][0]);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+}
+
+void DrawCamera::Mouse_Callback(GLFWwindow* window, double posX, double posY) 
+{
+	if (firstMouse_) 
+	{
+		lastX_ = posX;
+		lastY_ = posY;
+		firstMouse_ = false;
+	}
+
+	float offsetX = posX - lastX_;
+	float offsetY = lastY_ - posY;
+
+	lastX_ = posX;
+	lastY_ = posY;
+
+	//鼠标灵敏度
+	float sensitivity = 0.05f;
+	offsetX *= sensitivity;
+	offsetY *= sensitivity;
+
 
 }

@@ -3,11 +3,9 @@
 
 class Context;
 
-void Update(GLFWwindow* window, void* context);
+void Update(Window* w,GLFWwindow* window, double delaTime,void* context);
 Context* CreateContext(int* code);
 void DestroyContext(Context* context);
-
-
 
 // api documents:<https://www.khronos.org/registry/OpenGL-Refpages/gl4/>
 int main() 
@@ -35,32 +33,11 @@ int main()
 	}
 
 	window->Bind(context);
-
-	float vertices[] = {
-		//位置				//颜色
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,// left  
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // right 
-		0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
-	};
-
-	float rectangleVertices[] = {
-
-		////顶点位置				//颜色				// 纹理坐标
-		//0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		2.0f, 2.0f,		0.3f, 0.3f,// 右上角
-		//0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		2.0f, 0.0f,		0.3f, 0.0f,// 右下角
-		//-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f,		0.0f, 0.0f,// 左下角
-		//-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 2.0f,		0.0f, 0.1f,// 左上角
-
-		//顶点位置				//颜色				// 纹理坐标
-		0.5f, 0.5f, 0.0f,		1.0f,0.0f,0.0f,		2.0f, 2.0f,		1.0f, 1.0f,// 右上角
-		0.5f, -0.5f, 0.0f,		0.0f,1.0f,0.0f,		2.0f, 0.0f,		1.0f, 0.0f,// 右下角
-		-0.5f, -0.5f, 0.0f,		0.0f,0.0f,1.0f,		0.0f, 0.0f,		0.0f, 0.0f,// 左下角
-		-0.5f, 0.5f, 0.0f,		1.0f,1.0f,0.0f,		0.0f, 2.0f,		0.0f, 1.0f,// 左上角
-	};
-
-	context->draw1_->Init(vertices,sizeof(vertices));
-	context->draw2_->Init(rectangleVertices, sizeof(rectangleVertices));
-
+	int count = context->DrawsCount();
+	for (int i = 0; i < count; i++)
+	{
+		context->draws_[i]->Init();
+	}
 	window->Update(Update);
 	window->UnBind();
 
@@ -71,23 +48,31 @@ int main()
 
 }
 
-void Update(GLFWwindow* window,void*context) 
+void Update(Window* w,GLFWwindow* window, double delaTime,void*context)
 {
 	Context *c= (Context*)context;
-	c->window_ = window;
+	
+	DrawContext drawContext;
+	drawContext.window_ = window;
+	drawContext.windowHeight_ = w->GetHeight();
+	drawContext.windowWidth_ = w->GetWeight();
+	drawContext.delaTime_ = delaTime;
 
 	c->env_->Background(window);
 	c->env_->PressInput(window);
 
 	float time = glfwGetTime();
-
-	c->draw2_->Draw(context);
-	c->draw1_->Draw(context);
-	
+	int count = c->DrawsCount();
+	c->draws_[1]->Draw(&drawContext);
+	//for (int i = 0; i < count; i++)
+	//{
+	//	c->draws_[i]->Draw(&drawContext);
+	//}
 }
 
 Context* CreateContext(int* code)
 {
+
 	Context* context = new Context();
 	context->shaderManager_ = new ShadersManager();
 	
@@ -96,10 +81,14 @@ Context* CreateContext(int* code)
 	//这里需要判定，懒得写了
 	sm->CreateShader("helloWorld", "../Shaders/helloworld.vs", "../Shaders/helloworld.fs");
 	sm->CreateShader("texture", "../Shaders/textures.vs", "../Shaders/textures.fs");
+	sm->CreateShader("hello3D", "../Shaders/hello3d.vs", "../Shaders/textures.fs");
 
 	context->env_ = new HelloworldGradientEnvironment();
-	context->draw1_ = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
-	context->draw2_ = new Draw3D((*sm)["texture"]);
+
+	context->InitDraws(2);
+
+	context->draws_[0] = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
+	context->draws_[1] = new DrawCamera((*sm)["hello3D"]);
 
 	*code = SUCCESS;
 
@@ -110,8 +99,8 @@ void DestroyContext(Context* context)
 {
 	if (!context) return;
 	if (context->env_) delete context->env_;
-	if (context->draw1_) delete context->draw1_;
-	if (context->draw2_) delete context->draw2_;
+
+	context->RecycleDraws();
 	if (context->shaderManager_) delete context->shaderManager_;
 	delete context;
 }
