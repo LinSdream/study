@@ -1,8 +1,6 @@
 #include<windows/window.h>
 #include<opengl/helloworld.h>
 
-class Context;
-
 void Update(Window* w,GLFWwindow* window, double delaTime,void* context);
 Context* CreateContext(int* code);
 void DestroyContext(Context* context);
@@ -24,7 +22,7 @@ int main()
 		delete window;
 		return code; 
 	}
-	
+
 	Context* context = CreateContext(&code);
 	if (code != SUCCESS) 
 	{
@@ -33,11 +31,23 @@ int main()
 	}
 
 	window->Bind(context);
+
+	window->RegisterMousePosition_Callback([](GLFWwindow* window, double posX, double posY) 
+		{
+			void* context = glfwGetWindowUserPointer(window);
+			Context* c = static_cast<Context*>(context);
+			auto draw = static_cast<DrawCamera*> (c->draws_[1]);
+			if (draw == NULL) return;
+
+			draw->MoveCamera(posX, posY);
+		});
+
 	int count = context->DrawsCount();
 	for (int i = 0; i < count; i++)
 	{
-		context->draws_[i]->Init();
+		context->draws_[i]->Init(window);
 	}
+
 	window->Update(Update);
 	window->UnBind();
 
@@ -45,7 +55,6 @@ int main()
 	delete window;
 
 	return SUCCESS;
-
 }
 
 void Update(Window* w,GLFWwindow* window, double delaTime,void*context)
@@ -75,7 +84,7 @@ Context* CreateContext(int* code)
 
 	Context* context = new Context();
 	context->shaderManager_ = new ShadersManager();
-	
+	context->camera_ = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 	ShadersManager* sm = context->shaderManager_;
 
 	//这里需要判定，懒得写了
@@ -88,7 +97,7 @@ Context* CreateContext(int* code)
 	context->InitDraws(2);
 
 	context->draws_[0] = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
-	context->draws_[1] = new DrawCamera((*sm)["hello3D"]);
+	context->draws_[1] = new DrawCamera((*sm)["hello3D"], context->camera_);
 
 	*code = SUCCESS;
 

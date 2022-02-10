@@ -1,6 +1,7 @@
 #include <opengl/helloworld.h>
 #include<opengl/helperFun.h>
 #include<stb/stb_image.h>
+#include<windows/window.h>
 
 void HelloworldGradientEnvironment::Background(GLFWwindow* window)
 {
@@ -20,7 +21,7 @@ DrawTriangle::~DrawTriangle()
 	delete vbo_;
 }
 
-void DrawTriangle::Init()
+void DrawTriangle::Init(const void* context)
 {
 	vao_->Bind();
 	vbo_->Bind();
@@ -83,7 +84,7 @@ DrawRectangle::~DrawRectangle()
 	delete ebo_;
 }
 
-void DrawRectangle::Init() 
+void DrawRectangle::Init(const void* context)
 {
 
 	vao_->Bind();
@@ -259,7 +260,7 @@ DrawTwoConnectTriangle::~DrawTwoConnectTriangle()
 	delete vbo_;
 }
 
-void DrawTwoConnectTriangle::Init() 
+void DrawTwoConnectTriangle::Init(const void* context)
 {
 	vao_->Bind();
 	vbo_->Bind();
@@ -312,7 +313,7 @@ DrawTwoTriangleUseDiffVAOandVBO::~DrawTwoTriangleUseDiffVAOandVBO()
 	glDeleteVertexArrays(2, vaos_);
 }
 
-void DrawTwoTriangleUseDiffVAOandVBO::Init()
+void DrawTwoTriangleUseDiffVAOandVBO::Init(const void* context)
 {
 	float vertices[] = {
 		//位置				//颜色
@@ -382,7 +383,7 @@ DrawDynamicTriangle::~DrawDynamicTriangle()
 	delete vbo_;
 }
 
-void DrawDynamicTriangle::Init() 
+void DrawDynamicTriangle::Init(const void* context)
 {
 
 }
@@ -475,7 +476,7 @@ Draw3D::~Draw3D()
 	delete vbo_;
 }
 
-void Draw3D::Init()
+void Draw3D::Init(const void* context)
 {
 
 
@@ -683,7 +684,7 @@ void Draw3D::Draw(const void* context)
 	}
 }
 
-DrawCamera::DrawCamera(Shader* shader) :DrawBase(shader)
+DrawCamera::DrawCamera(Shader* shader, Camera* camera) :DrawBase(shader, camera)
 {
 	vao_ = new VAOContext();
 	ebo_ = new EBOContext();
@@ -703,10 +704,12 @@ DrawCamera::~DrawCamera()
 	delete vbo_;
 }
 
-void DrawCamera::Init()
+void DrawCamera::Init(const void* context)
 {
+	Window* w = (Window*)context;
 
-
+	//w->RegisterMousePosition(([](GLFWwindow* window, double xpos, double ypos) {Mouse_Callback(window, xpos, ypos);}));
+	
 	//OpenGL 通过glEnable 与 glDisable 来控制开启或关闭一些功能，直到调用对应的功能来关闭为止
 	//这里选择开启深度测试
 	glEnable(GL_DEPTH_TEST);
@@ -869,12 +872,6 @@ void DrawCamera::Draw(const void* context)
 	//model = glm::rotate(model, glm::radians(50.0f)*time, glm::vec3(0.5f, 1.0f, 0.0f));
 
 
-	float radius = 10.0f;
-	float camX = sin(time) * radius;
-	float camZ = cos(time) * radius;
-
-	float cameraSpeed = cameraSpeed_ * c->delaTime_;
-
 	if (glfwGetKey(c->window_, GLFW_KEY_U) == GLFW_PRESS) {
 		visibilityValue_ += 0.1f;
 	}
@@ -882,16 +879,16 @@ void DrawCamera::Draw(const void* context)
 		visibilityValue_ -= 0.1f;
 	}
 	if (glfwGetKey(c->window_, GLFW_KEY_W) == GLFW_PRESS) {
-		cameraPos_ += cameraSpeed * glm::normalize(cameraFront_);
+		camera_->ProcessKeyboard(Camera::ECameraMovement::FORWARD, c->delaTime_);
 	}
 	if (glfwGetKey(c->window_, GLFW_KEY_S) == GLFW_PRESS) {
-		cameraPos_ -= cameraSpeed * glm::normalize(cameraFront_);
+		camera_->ProcessKeyboard(Camera::ECameraMovement::BACKWARD, c->delaTime_);
 	}
 	if (glfwGetKey(c->window_, GLFW_KEY_D) == GLFW_PRESS) {
-		cameraPos_ += glm::normalize(glm::cross(cameraFront_, cameraUp_)) * cameraSpeed;
+		camera_->ProcessKeyboard(Camera::ECameraMovement::RIGHT, c->delaTime_);
 	}
 	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
-		cameraPos_ -= glm::normalize(glm::cross(cameraFront_, cameraUp_)) * cameraSpeed;
+		camera_->ProcessKeyboard(Camera::ECameraMovement::LEFT, c->delaTime_);
 	}
 
 	glm::mat4 view = glm::mat4(1.0f);
@@ -900,16 +897,14 @@ void DrawCamera::Draw(const void* context)
 	//center:相机指向的目标位置
 	//up:世界坐标中的向上向量
 	//计算出来的矩阵就可以用来作为观察矩阵
-	view = glm::lookAt(cameraPos_, cameraPos_ + cameraFront_, cameraUp_);
-	//std::cout << "观察举证 view: \n{\n " << view[0][0] << "," << view[0][1] << "," << view[0][2] << "," << view[0][3] << ",\n"
-	//	<< view[1][0] << "," << view[1][1] << "," << view[1][2] << "," << view[1][3] << ",\n" << view[2][0] << "," << view[2][1] << "," << view[2][2] << "," << view[2][3]
-	//	<< "\n" << view[3][0] << "," << view[3][1] << "," << view[3][2] << "," << view[3][3] << "\n}";
-	//std::cout << (cameraPos_ + cameraFront_).x << "," << (cameraPos_ + cameraFront_).y << "," << (cameraPos_ + cameraFront_).z << std::endl;
+	view = camera_->GetViewMatrix();
+	std::cout << "观察举证 view: \n{\n " << view[0][0] << "," << view[0][1] << "," << view[0][2] << "," << view[0][3] << ",\n"
+		<< view[1][0] << "," << view[1][1] << "," << view[1][2] << "," << view[1][3] << ",\n" << view[2][0] << "," << view[2][1] << "," << view[2][2] << "," << view[2][3]
+		<< "\n" << view[3][0] << "," << view[3][1] << "," << view[3][2] << "," << view[3][3] << "\n}";
 
-	glm::mat4 projection;
+	glm::mat4 projection = glm::mat4(1.0f);
 	projection = glm::perspective(glm::radians(45.0f), c->windowWidth_ / c->windowHeight_, 0.01f, 100.0f);
 
-	//shader_->SetMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 	shader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
 	shader_->SetMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
@@ -931,25 +926,39 @@ void DrawCamera::Draw(const void* context)
 	}
 }
 
-void DrawCamera::Mouse_Callback(GLFWwindow* window, double posX, double posY) 
-{
-	if (firstMouse_) 
-	{
-		lastX_ = posX;
-		lastY_ = posY;
-		firstMouse_ = false;
-	}
-
-	float offsetX = posX - lastX_;
-	float offsetY = lastY_ - posY;
-
-	lastX_ = posX;
-	lastY_ = posY;
-
-	//鼠标灵敏度
-	float sensitivity = 0.05f;
-	offsetX *= sensitivity;
-	offsetY *= sensitivity;
-
-
-}
+//void DrawCamera::MousePositionMovement(double posX, double posY) 
+//{
+//	if (firstMouse_) 
+//	{
+//		lastX_ = posX;
+//		lastY_ = posY;
+//		firstMouse_ = false;
+//	}
+//
+//	float offsetX = posX - lastX_;
+//	//这里之所以相反是因为glfwSetCursorPosCallback返回的x,y是相对有窗口的左上角位置，因此 y的偏移量是：-(posy - lastY) -> lastY - posy
+//	float offsetY = lastY_ - posY;
+//	//std::cout << "鼠标位置:( " << posX << "," << posY << ")";
+//
+//	lastX_ = posX;
+//	lastY_ = posY;
+//
+//	//鼠标灵敏度
+//	float sensitivity = 0.05f;
+//
+//	offsetX *= sensitivity;
+//	offsetY *= sensitivity;
+//
+//	yaw_ += offsetX;
+//	pitch_ += offsetY;
+//
+//	pitch_ = Clamp(pitch_, 89.0f, -89.0f);
+//	glm::vec3 front = glm::vec3(1.0f);
+//	float radianYaw = glm::radians(yaw_);
+//	float radianPitch = glm::radians(pitch_);
+//	front.x = cos(radianYaw) * cos(radianPitch);
+//	front.y = sin(radianPitch);
+//	front.z = sin(radianYaw) * cos(radianYaw);
+//	cameraFront_ = glm::normalize(front);
+//	std::cout << "Front: (" << cameraFront_.x << "," << cameraFront_.y << "," << cameraFront_.z << ")" << std::endl;
+//}

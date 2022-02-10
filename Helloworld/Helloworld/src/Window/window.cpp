@@ -103,10 +103,12 @@ int Window::GetWeight()
 void Window::Bind(void* context)
 {
 	context_ = context;
+	glfwSetWindowUserPointer(window_, context);
 }
 
 void Window::UnBind() 
 {
+	glfwSetWindowUserPointer(window_, NULL);
 	context_ = NULL;
 }
 
@@ -130,3 +132,7 @@ void Window::Update(RelRenderFun render_fun)
 
 }
 
+void Window::RegisterMousePosition_Callback(GLFWcursorposfun function)
+{
+	glfwSetCursorPosCallback(window_,function);
+}

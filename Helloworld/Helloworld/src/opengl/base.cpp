@@ -11,7 +11,6 @@ void HelloworldEnvironment::PressInput(GLFWwindow* window)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
-
 }
 
 VBOContext::VBOContext()
@@ -262,3 +261,94 @@ void ShadersManager::Recycle(Shader* shader)
 		return;
 	}
 }
+
+Camera::Camera(glm::vec3 _position, glm::vec3 _up, float _yaw, float _pitch, float _speed, float _mouseSensitivity)
+	:front(glm::vec3(0.0f, 0.0f, -1.0f)) , firstMouse_(true)
+{
+	speed = _speed;
+	position = _position;
+	worldUp = _up;
+	yaw = _yaw;
+	pitch = _pitch;
+	mouseSensitivity = _mouseSensitivity;
+	UpdateCameraVectors();
+}
+
+Camera::Camera(float _posX, float _posY, float _posZ, float _upX, float _upY, float _upZ, float _yaw, float _pitch, float _speed , float _mouseSensitivity )
+	:front(glm::vec3(0.0f, 0.0f, -1.0f)) , firstMouse_(true)
+{
+	position = glm::vec3(_posX, _posY, _posZ);
+	worldUp = glm::vec3(_upX, _upY, _upZ);
+	yaw = _yaw;
+	pitch = _pitch;
+	UpdateCameraVectors();
+}
+
+void Camera::ProcessKeyboard(Camera::ECameraMovement direction, float delaTime)
+{
+
+	float velocity = speed * delaTime;
+	if (direction == Camera::ECameraMovement::FORWARD)
+	{
+		position += front * velocity;
+	}
+	if (direction == Camera::ECameraMovement::BACKWARD)
+	{
+		position -= front * velocity;
+	}
+	if (direction == Camera::ECameraMovement::RIGHT)
+	{
+		position += right * velocity;
+	}
+	if (direction == Camera::ECameraMovement::LEFT)
+	{
+		position -= right * velocity;
+	}
+}
+
+void Camera::UpdateCameraVectors() 
+{
+	glm::vec3 _front = glm::vec3(1.0f);
+
+	float rYaw = glm::radians(yaw);
+	float rPitch = glm::radians(pitch);
+
+	_front.x = cos(rYaw) * cos(rPitch);
+	_front.y = sin(rPitch);
+	_front.z = sin(rYaw) * cos(rPitch);
+	front = glm::normalize(_front);
+
+	right = glm::normalize(glm::cross(front, worldUp));
+	up = glm::normalize(glm::cross(right, front));
+}
+
+glm::mat4 Camera::GetViewMatrix() 
+{
+	return glm::lookAt(position, position + front, up);
+}
+
+void Camera::ProcessMouseMovement(float xpos, float ypos, bool constrainPitch) 
+{
+	if (firstMouse_) 
+	{
+		lastX_ = xpos;
+		lastY_ = ypos;
+		firstMouse_ = false;
+	}
+
+	float xoffset = xpos - lastX_;
+	float yoffset = lastY_ - ypos;
+
+	xoffset *= mouseSensitivity;
+	yoffset *= mouseSensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	if (constrainPitch) 
+	{
+		pitch = Clamp(pitch, 89.9f, -89.9f);
+	}
+	UpdateCameraVectors();
+}
+

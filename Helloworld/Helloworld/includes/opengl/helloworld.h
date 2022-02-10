@@ -1,5 +1,6 @@
 #pragma once
 #include<opengl/base.h>
+#include<windows/window.h>
 #include<functional>
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
@@ -17,25 +18,34 @@ class DrawBase
 {
 public:
 
-	DrawBase(Shader* shader) { shader_ = shader; }
+	DrawBase(Shader* shader,Camera* camera = NULL):camera_(camera) , shader_(shader){}
 	virtual ~DrawBase() {}
 
-	virtual void Init() = 0;
+	virtual void Init(const void* context) = 0;
 	virtual void Draw(const void* context) = 0;
+
+	virtual void MoveCamera(float xpos, float ypos, bool constrainPitch = true)
+	{
+		camera_->ProcessMouseMovement(xpos, ypos, constrainPitch);
+	}
 
 protected:
 
 	Shader* shader_;
+	Camera* camera_;
+
 };
 
 class Context
 {
 public:
+
 	HelloworldEnvironment* env_;
-
+	Window* windows_;
 	DrawBase** draws_;
-
 	ShadersManager* shaderManager_;
+	Camera* camera_;
+
 	float visibilityValue_;
 
 	void InitDraws(int count) 
@@ -78,7 +88,7 @@ public :
 	~DrawTriangle();
 
 	void Draw(const void* context);
-	void Init();
+	void Init(const void* context);
 
 private:
 
@@ -95,7 +105,7 @@ public:
 	~DrawRectangle();
 
 	void Draw(const void* context);
-	void Init();
+	void Init(const void* context);
 
 private:
 
@@ -116,7 +126,7 @@ public :
 	~Draw3D();
 
 	void Draw(const void* context);
-	void Init();
+	void Init(const void* context);
 
 private:
 
@@ -152,7 +162,7 @@ public:
 	~DrawTwoConnectTriangle();
 	
 	void Draw(const void* context);
-	void Init();
+	void Init(const void* context);
 
 private:
 
@@ -169,7 +179,7 @@ public:
 	~DrawTwoTriangleUseDiffVAOandVBO();
 
 	void Draw(const void* context);
-	void Init();
+	void Init(const void* context);
 
 private:
 
@@ -185,7 +195,7 @@ public:
 	~DrawDynamicTriangle();
 
 	void Draw(const void* context);
-	void Init();
+	void Init(const void* context);
 
 private:
 
@@ -198,15 +208,14 @@ class DrawCamera :public DrawBase
 
 public:
 
-	DrawCamera(Shader* shader);
+	DrawCamera(Shader* shader,Camera* camera);
 	~DrawCamera();
 
 	void Draw(const void* context);
-	void Init();
+	void Init(const void* context);
 
 private:
 
-	void Mouse_Callback(GLFWwindow* window, double posX, double posY);
 
 	VAOContext* vao_;
 	EBOContext* ebo_;
@@ -216,20 +225,20 @@ private:
 	uint texture2_;
 
 	float visibilityValue_;
-	bool firstMouse_;
-	float lastX_;
-	float lastY_;
-	//¸©Ñö½Ç
-	float pitch_;
-	//Æ«º½½Ç
-	float yaw_;
-	//ÊÓÒ° field of view
-	float fov_;
+	//bool firstMouse_;
+	//float lastX_;
+	//float lastY_;
+	////¸©Ñö½Ç
+	//float pitch_;
+	////Æ«º½½Ç
+	//float yaw_;
+	////ÊÓÒ° field of view
+	//float fov_;
 
-	glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
-	glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
-	glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
-	float cameraSpeed_ = 2.5f;
+	//glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
+	//glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
+	//glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
+	//float cameraSpeed_ = 2.5f;
 
 	glm::vec3 cubePositions_[10] =
 	{

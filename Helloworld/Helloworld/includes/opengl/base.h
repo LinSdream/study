@@ -1,5 +1,9 @@
 #pragma once
 #include<opengl/helperFun.h>
+#include<glm/glm.hpp>
+#include<glm/gtc/matrix_transform.hpp>
+#include<glm/gtc/type_ptr.hpp>
+
 #include<iostream>
 #include<map>
 #include <list>
@@ -154,7 +158,6 @@ namespace MySpace
 	};
 }
 
-
 class HelloworldEnvironment
 {
 
@@ -261,7 +264,44 @@ private:
 	sshaderMap* shaderMap_;
 };
 
-class Camera 
+class Camera
 {
+public:
+
+	enum ECameraMovement 
+	{
+		FORWARD,
+		BACKWARD,
+		LEFT,
+		RIGHT,
+	};
+
+	glm::vec3 position;
+	glm::vec3 front;
+	glm::vec3 up;
+	glm::vec3 right;
+	glm::vec3 worldUp;
+
+	float yaw;
+	float pitch;
+	float speed;
+	float mouseSensitivity;
+	float zoom;
+
+	Camera(glm::vec3 _position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 _up = glm::vec3(0.0f, 1.0f, 0.0f), float _yaw = -90.0f, float _pitch = 0.0f, float _speed = 2.5f, float _mouseSensitivity = 0.1f);
+	Camera(float _posX, float _posY, float _posZ, float _upX, float _upY, float _upZ, float _yaw, float _pitch,float _speed = 2.5f, float _mouseSensitivity = 0.1f);
+
+	glm::mat4 GetViewMatrix();
+
+	virtual void ProcessKeyboard(ECameraMovement direction, float deltaTime);
+	virtual void ProcessMouseMovement(float xpos, float ypos, bool constrainPitch = true);
+
+private:
+
+	float lastX_;
+	float lastY_;
+	bool firstMouse_;
+
+	void UpdateCameraVectors();
 
 };

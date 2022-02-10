@@ -17,6 +17,8 @@ public:
 	Window(int wight,int height,char *title, FramebuffSizeCallback callback);
 	~Window();
 
+	void RegisterMousePosition_Callback(GLFWcursorposfun function);
+
 	void Update(RelRenderFun render_fun);
 	int GetInitializeStatus();
 	int GetHeight();
@@ -28,7 +30,6 @@ public:
 private:
 
 	GLFWwindow* window_;
-
 	int init_code_;
 	int height_;
 	int weight_;
