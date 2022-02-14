@@ -18,7 +18,7 @@ class DrawBase
 {
 public:
 
-	DrawBase(Shader* shader,Camera* camera = NULL):camera_(camera) , shader_(shader){}
+	DrawBase(Shader* shader,FPS_Camera* camera = NULL):camera_(camera) , shader_(shader){}
 	virtual ~DrawBase() {}
 
 	virtual void Init(const void* context) = 0;
@@ -32,7 +32,7 @@ public:
 protected:
 
 	Shader* shader_;
-	Camera* camera_;
+	FPS_Camera* camera_;
 
 };
 
@@ -44,7 +44,7 @@ public:
 	Window* windows_;
 	DrawBase** draws_;
 	ShadersManager* shaderManager_;
-	Camera* camera_;
+	FPS_Camera* camera_;
 
 	float visibilityValue_;
 
@@ -208,11 +208,13 @@ class DrawCamera :public DrawBase
 
 public:
 
-	DrawCamera(Shader* shader,Camera* camera);
+	DrawCamera(Shader* shader,FPS_Camera* camera);
 	~DrawCamera();
 
 	void Draw(const void* context);
 	void Init(const void* context);
+	void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
+	void MousePositionMovement(double posX, double posY);
 
 private:
 
@@ -225,20 +227,16 @@ private:
 	uint texture2_;
 
 	float visibilityValue_;
-	//bool firstMouse_;
-	//float lastX_;
-	//float lastY_;
-	////¸©Ñö½Ç
-	//float pitch_;
-	////Æ«º½½Ç
-	//float yaw_;
-	////ÊÓÒ° field of view
-	//float fov_;
+	bool firstMouse_;
+	float lastX_;
+	float lastY_;
+	float yaw_;
+	float pitch_;
 
-	//glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
-	//glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
-	//glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
-	//float cameraSpeed_ = 2.5f;
+	glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
+	float cameraSpeed_ = 2.5f;
 
 	glm::vec3 cubePositions_[10] =
 	{

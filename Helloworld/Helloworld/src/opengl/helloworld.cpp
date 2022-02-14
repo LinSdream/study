@@ -684,7 +684,7 @@ void Draw3D::Draw(const void* context)
 	}
 }
 
-DrawCamera::DrawCamera(Shader* shader, Camera* camera) :DrawBase(shader, camera)
+DrawCamera::DrawCamera(Shader* shader, FPS_Camera* camera) :DrawBase(shader, camera)
 {
 	vao_ = new VAOContext();
 	ebo_ = new EBOContext();
@@ -870,7 +870,8 @@ void DrawCamera::Draw(const void* context)
 	////创建一个模型矩阵
 	//glm::mat4 model = glm::mat4(1.0f);
 	//model = glm::rotate(model, glm::radians(50.0f)*time, glm::vec3(0.5f, 1.0f, 0.0f));
-
+	
+	float speed = cameraSpeed_  * c->delaTime_;
 
 	if (glfwGetKey(c->window_, GLFW_KEY_U) == GLFW_PRESS) {
 		visibilityValue_ += 0.1f;
@@ -879,16 +880,20 @@ void DrawCamera::Draw(const void* context)
 		visibilityValue_ -= 0.1f;
 	}
 	if (glfwGetKey(c->window_, GLFW_KEY_W) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(Camera::ECameraMovement::FORWARD, c->delaTime_);
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, c->delaTime_);
+		//cameraPos_ += speed * cameraFront_;
 	}
 	if (glfwGetKey(c->window_, GLFW_KEY_S) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(Camera::ECameraMovement::BACKWARD, c->delaTime_);
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, c->delaTime_);
+		//cameraPos_ -= speed * cameraFront_;
 	}
 	if (glfwGetKey(c->window_, GLFW_KEY_D) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(Camera::ECameraMovement::RIGHT, c->delaTime_);
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, c->delaTime_);
+		//cameraPos_ += glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
 	}
 	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(Camera::ECameraMovement::LEFT, c->delaTime_);
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, c->delaTime_);
+		//cameraPos_ -= glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
 	}
 
 	glm::mat4 view = glm::mat4(1.0f);
@@ -897,15 +902,16 @@ void DrawCamera::Draw(const void* context)
 	//center:相机指向的目标位置
 	//up:世界坐标中的向上向量
 	//计算出来的矩阵就可以用来作为观察矩阵
-	view = camera_->GetViewMatrix();
-	std::cout << "观察举证 view: \n{\n " << view[0][0] << "," << view[0][1] << "," << view[0][2] << "," << view[0][3] << ",\n"
-		<< view[1][0] << "," << view[1][1] << "," << view[1][2] << "," << view[1][3] << ",\n" << view[2][0] << "," << view[2][1] << "," << view[2][2] << "," << view[2][3]
-		<< "\n" << view[3][0] << "," << view[3][1] << "," << view[3][2] << "," << view[3][3] << "\n}";
+	view = glm::lookAt(cameraPos_, cameraPos_ + cameraFront_, cameraUp_);
+	glm::mat4 v = camera_->GetViewMatrix();
+	//std::cout << "观察举证 view: \n{\n " << view[0][0] << "," << view[0][1] << "," << view[0][2] << "," << view[0][3] << ",\n"
+	//	<< view[1][0] << "," << view[1][1] << "," << view[1][2] << "," << view[1][3] << ",\n" << view[2][0] << "," << view[2][1] << "," << view[2][2] << "," << view[2][3]
+	//	<< "\n" << view[3][0] << "," << view[3][1] << "," << view[3][2] << "," << view[3][3] << "\n}";
 
 	glm::mat4 projection = glm::mat4(1.0f);
-	projection = glm::perspective(glm::radians(45.0f), c->windowWidth_ / c->windowHeight_, 0.01f, 100.0f);
+	projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
 
-	shader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(v));
 	shader_->SetMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
 	//shader_->Set2f("towards", -1.0f, -1.0f);
@@ -926,39 +932,60 @@ void DrawCamera::Draw(const void* context)
 	}
 }
 
-//void DrawCamera::MousePositionMovement(double posX, double posY) 
-//{
-//	if (firstMouse_) 
-//	{
-//		lastX_ = posX;
-//		lastY_ = posY;
-//		firstMouse_ = false;
-//	}
-//
-//	float offsetX = posX - lastX_;
-//	//这里之所以相反是因为glfwSetCursorPosCallback返回的x,y是相对有窗口的左上角位置，因此 y的偏移量是：-(posy - lastY) -> lastY - posy
-//	float offsetY = lastY_ - posY;
-//	//std::cout << "鼠标位置:( " << posX << "," << posY << ")";
-//
-//	lastX_ = posX;
-//	lastY_ = posY;
-//
-//	//鼠标灵敏度
-//	float sensitivity = 0.05f;
-//
-//	offsetX *= sensitivity;
-//	offsetY *= sensitivity;
-//
-//	yaw_ += offsetX;
-//	pitch_ += offsetY;
-//
-//	pitch_ = Clamp(pitch_, 89.0f, -89.0f);
-//	glm::vec3 front = glm::vec3(1.0f);
-//	float radianYaw = glm::radians(yaw_);
-//	float radianPitch = glm::radians(pitch_);
-//	front.x = cos(radianYaw) * cos(radianPitch);
-//	front.y = sin(radianPitch);
-//	front.z = sin(radianYaw) * cos(radianYaw);
-//	cameraFront_ = glm::normalize(front);
-//	std::cout << "Front: (" << cameraFront_.x << "," << cameraFront_.y << "," << cameraFront_.z << ")" << std::endl;
-//}
+void DrawCamera::MoveCamera(float xpos, float ypos, bool constrainPitch) 
+{
+	//MousePositionMovement(xpos, ypos);
+	//return;
+	if (firstMouse_) 
+	{
+		lastX_ = xpos;
+		lastY_ = ypos;
+		firstMouse_ = false;
+	}
+
+	float xoffset = xpos - lastX_;
+	float yoffset = lastY_ - ypos;
+
+	lastX_ = xpos;
+	lastY_ = ypos;
+
+	camera_->ProcessMouseMovement(xoffset, yoffset, constrainPitch);
+
+}
+
+void DrawCamera::MousePositionMovement(double posX, double posY) 
+{
+	if (firstMouse_) 
+	{
+		lastX_ = posX;
+		lastY_ = posY;
+		firstMouse_ = false;
+	}
+
+	float offsetX = posX - lastX_;
+	//这里之所以相反是因为glfwSetCursorPosCallback返回的x,y是相对有窗口的左上角位置，因此 y的偏移量是：-(posy - lastY) -> lastY - posy
+	float offsetY = lastY_ - posY;
+	//std::cout << "鼠标位置:( " << posX << "," << posY << ")";
+
+	lastX_ = posX;
+	lastY_ = posY;
+
+	//鼠标灵敏度
+	float sensitivity = 0.05f;
+
+	offsetX *= sensitivity;
+	offsetY *= sensitivity;
+
+	yaw_ += offsetX;
+	pitch_ += offsetY;
+
+	pitch_ = Clamp(pitch_, 89.0f, -89.0f);
+	glm::vec3 front = glm::vec3(1.0f);
+	float radianYaw = glm::radians(yaw_);
+	float radianPitch = glm::radians(pitch_);
+	front.x = cos(radianYaw) * cos(radianPitch);
+	front.y = sin(radianPitch);
+	front.z = sin(radianYaw) * cos(radianYaw);
+	cameraFront_ = glm::normalize(front);
+	std::cout << "Front: (" << cameraFront_.x << "," << cameraFront_.y << "," << cameraFront_.z << ")" << std::endl;
+}

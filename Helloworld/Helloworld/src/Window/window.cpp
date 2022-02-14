@@ -134,5 +134,11 @@ void Window::Update(RelRenderFun render_fun)
 
 void Window::RegisterMousePosition_Callback(GLFWcursorposfun function)
 {
+	glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window_,function);
+}
+
+void Window::RegisterMouseScroll_Callback(GLFWscrollfun cb)
+{
+	glfwSetScrollCallback(window_, cb);
 }

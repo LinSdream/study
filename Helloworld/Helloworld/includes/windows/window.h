@@ -17,7 +17,8 @@ public:
 	Window(int wight,int height,char *title, FramebuffSizeCallback callback);
 	~Window();
 
-	void RegisterMousePosition_Callback(GLFWcursorposfun function);
+	void RegisterMousePosition_Callback(GLFWcursorposfun cb);
+	void RegisterMouseScroll_Callback(GLFWscrollfun cb);
 
 	void Update(RelRenderFun render_fun);
 	int GetInitializeStatus();

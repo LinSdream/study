@@ -262,20 +262,18 @@ void ShadersManager::Recycle(Shader* shader)
 	}
 }
 
-Camera::Camera(glm::vec3 _position, glm::vec3 _up, float _yaw, float _pitch, float _speed, float _mouseSensitivity)
-	:front(glm::vec3(0.0f, 0.0f, -1.0f)) , firstMouse_(true)
+FPS_Camera::FPS_Camera(glm::vec3 _position, glm::vec3 _up, float _yaw, float _pitch, float _speed, float _zoom, float _mouseSensitivity)
+	:front(glm::vec3(0.0f, 0.0f, -1.0f)), speed(_speed), mouseSensitivity(_mouseSensitivity), zoom(_zoom)
 {
-	speed = _speed;
 	position = _position;
 	worldUp = _up;
 	yaw = _yaw;
 	pitch = _pitch;
-	mouseSensitivity = _mouseSensitivity;
 	UpdateCameraVectors();
 }
 
-Camera::Camera(float _posX, float _posY, float _posZ, float _upX, float _upY, float _upZ, float _yaw, float _pitch, float _speed , float _mouseSensitivity )
-	:front(glm::vec3(0.0f, 0.0f, -1.0f)) , firstMouse_(true)
+FPS_Camera::FPS_Camera(float _posX, float _posY, float _posZ, float _upX, float _upY, float _upZ, float _yaw, float _pitch, float _speed, float _mouseSensitivity)
+	:front(glm::vec3(0.0f, 0.0f, -1.0f)), speed(_speed), mouseSensitivity(_mouseSensitivity)
 {
 	position = glm::vec3(_posX, _posY, _posZ);
 	worldUp = glm::vec3(_upX, _upY, _upZ);
@@ -284,30 +282,43 @@ Camera::Camera(float _posX, float _posY, float _posZ, float _upX, float _upY, fl
 	UpdateCameraVectors();
 }
 
-void Camera::ProcessKeyboard(Camera::ECameraMovement direction, float delaTime)
+void FPS_Camera::ProcessKeyboard(FPS_Camera::ECameraMovement direction, float delaTime)
 {
 
+	front = glm::normalize(glm::vec3(front.x, 0.0f, front.z));
+	right = glm::normalize(glm::cross(front, worldUp));
+
 	float velocity = speed * delaTime;
-	if (direction == Camera::ECameraMovement::FORWARD)
+	if (direction == FPS_Camera::ECameraMovement::FORWARD)
 	{
 		position += front * velocity;
 	}
-	if (direction == Camera::ECameraMovement::BACKWARD)
+	if (direction == FPS_Camera::ECameraMovement::BACKWARD)
 	{
 		position -= front * velocity;
 	}
-	if (direction == Camera::ECameraMovement::RIGHT)
+	if (direction == FPS_Camera::ECameraMovement::RIGHT)
 	{
 		position += right * velocity;
 	}
-	if (direction == Camera::ECameraMovement::LEFT)
+	if (direction == FPS_Camera::ECameraMovement::LEFT)
 	{
 		position -= right * velocity;
 	}
+	position.y = 0.0f;
 }
 
-void Camera::UpdateCameraVectors() 
+void FPS_Camera::UpdateCameraVectors() 
 {
+
+	//glm::mat4 rotateMat = glm::mat4(1.0f);
+	//rotateMat = glm::rotate(rotateMat, glm::radians(-yaw), glm::vec3(0.0f, 1.0f, 0.0f));
+	//rotateMat = glm::rotate(rotateMat, glm::radians(pitch), glm::vec3(0.0f, 1.0f, 0.0f));
+	//glm::vec4 f = rotateMat * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
+	//front = glm::normalize(glm::vec3(f.x, f.y, f.z));
+	//right = glm::normalize(glm::cross(front, worldUp));
+	//up = glm::normalize(glm::cross(front, right));
+
 	glm::vec3 _front = glm::vec3(1.0f);
 
 	float rYaw = glm::radians(yaw);
@@ -320,24 +331,44 @@ void Camera::UpdateCameraVectors()
 
 	right = glm::normalize(glm::cross(front, worldUp));
 	up = glm::normalize(glm::cross(right, front));
+
 }
 
-glm::mat4 Camera::GetViewMatrix() 
+glm::mat4 FPS_Camera::GetViewMatrix() 
 {
 	return glm::lookAt(position, position + front, up);
 }
 
-void Camera::ProcessMouseMovement(float xpos, float ypos, bool constrainPitch) 
+glm::mat4 FPS_Camera::GetProjectionMatrix(float aspectRatio, float zNear, float zFar)
 {
-	if (firstMouse_) 
-	{
-		lastX_ = xpos;
-		lastY_ = ypos;
-		firstMouse_ = false;
-	}
+	return glm::perspective(glm::radians(zoom), aspectRatio, zNear, zFar);
+}
 
-	float xoffset = xpos - lastX_;
-	float yoffset = lastY_ - ypos;
+glm::mat4 FPS_Camera::CalculateLookAtMatrix(glm::vec3 position, glm::vec3 target, glm::vec3 worldUp) 
+{
+	glm::vec3 zaxis = glm::normalize(position - target);
+	glm::vec3 xaxis = glm::normalize(glm::cross(worldUp, zaxis));
+	glm::vec3 yaxis = glm::cross(zaxis, xaxis);
+	glm::mat4 translation = glm::mat4(1.0f);
+	translation[3][0] = -position.x;
+	translation[3][1] = -position.y;
+	translation[3][2] = -position.z;
+	glm::mat4 rotation = glm::mat4(1.0f);
+	rotation[0][0] = xaxis.x; // First column, first row
+	rotation[1][0] = xaxis.y;
+	rotation[2][0] = xaxis.z;
+	rotation[0][1] = yaxis.x; // First column, second row
+	rotation[1][1] = yaxis.y;
+	rotation[2][1] = yaxis.z;
+	rotation[0][2] = zaxis.x; // First column, third row
+	rotation[1][2] = zaxis.y;
+	rotation[2][2] = zaxis.z;
+	return rotation * translation;
+}
+
+void FPS_Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch)
+{
+	std::cout << "(" << xoffset << "," << yoffset << "£©" << std::endl;
 
 	xoffset *= mouseSensitivity;
 	yoffset *= mouseSensitivity;
@@ -349,6 +380,12 @@ void Camera::ProcessMouseMovement(float xpos, float ypos, bool constrainPitch)
 	{
 		pitch = Clamp(pitch, 89.9f, -89.9f);
 	}
+
 	UpdateCameraVectors();
 }
 
+void FPS_Camera::ProcessMouseScroll(float yoffset) 
+{
+	zoom -= yoffset;
+	zoom = Clamp(zoom, 45.0f, 1.0f);
+}

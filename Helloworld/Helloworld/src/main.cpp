@@ -36,11 +36,14 @@ int main()
 		{
 			void* context = glfwGetWindowUserPointer(window);
 			Context* c = static_cast<Context*>(context);
-			auto draw = static_cast<DrawCamera*> (c->draws_[1]);
-			if (draw == NULL) return;
-
-			draw->MoveCamera(posX, posY);
+			c->draws_[1]->MoveCamera(posX, posY);
 		});
+
+	//window->RegisterMouseScroll_Callback([](GLFWwindow* window, double xoffset, double yoffset) 
+	//	{
+	//		void* context = glfwGetWindowUserPointer(window);
+	//		Context* c = static_cast<Context*>(context);
+	//	});
 
 	int count = context->DrawsCount();
 	for (int i = 0; i < count; i++)
@@ -84,7 +87,7 @@ Context* CreateContext(int* code)
 
 	Context* context = new Context();
 	context->shaderManager_ = new ShadersManager();
-	context->camera_ = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+	context->camera_ = new FPS_Camera(glm::vec3(0.0f, 0.0f, 3.0f));
 	ShadersManager* sm = context->shaderManager_;
 
 	//这里需要判定，懒得写了
@@ -113,3 +116,4 @@ void DestroyContext(Context* context)
 	if (context->shaderManager_) delete context->shaderManager_;
 	delete context;
 }
+

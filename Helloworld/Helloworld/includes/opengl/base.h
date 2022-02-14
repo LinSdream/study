@@ -264,7 +264,7 @@ private:
 	sshaderMap* shaderMap_;
 };
 
-class Camera
+class FPS_Camera
 {
 public:
 
@@ -288,20 +288,19 @@ public:
 	float mouseSensitivity;
 	float zoom;
 
-	Camera(glm::vec3 _position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 _up = glm::vec3(0.0f, 1.0f, 0.0f), float _yaw = -90.0f, float _pitch = 0.0f, float _speed = 2.5f, float _mouseSensitivity = 0.1f);
-	Camera(float _posX, float _posY, float _posZ, float _upX, float _upY, float _upZ, float _yaw, float _pitch,float _speed = 2.5f, float _mouseSensitivity = 0.1f);
+	FPS_Camera(glm::vec3 _position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 _up = glm::vec3(0.0f, 1.0f, 0.0f), float _yaw = -90.0f, float _pitch = 0.0f, float _speed = 2.5f, float _zoom = 45.0f, float _mouseSensitivity = 0.1f);
+	FPS_Camera(float _posX, float _posY, float _posZ, float _upX, float _upY, float _upZ, float _yaw, float _pitch,float _speed = 2.5f, float _mouseSensitivity = 0.1f);
 
-	glm::mat4 GetViewMatrix();
+	virtual glm::mat4 GetViewMatrix();
+	virtual glm::mat4 GetProjectionMatrix(float aspectRatio, float zNear = 0.1f, float zFar = 100.0f);
+	virtual glm::mat4 CalculateLookAtMatrix(glm::vec3 position, glm::vec3 target, glm::vec3 worldUp);
 
 	virtual void ProcessKeyboard(ECameraMovement direction, float deltaTime);
-	virtual void ProcessMouseMovement(float xpos, float ypos, bool constrainPitch = true);
+	virtual void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch);
+	virtual void ProcessMouseScroll(float yoffset);
 
-private:
+protected:
 
-	float lastX_;
-	float lastY_;
-	bool firstMouse_;
-
-	void UpdateCameraVectors();
+	virtual void UpdateCameraVectors();
 
 };
