@@ -184,6 +184,14 @@ void Shader::SetMatrix4fv(const char* name, int matrixCount, GLboolean transpose
 	glUniformMatrix4fv(uniformID, matrixCount, transpose, value);
 }
 
+void Shader::SetMatrix3fv(const char* name, int matrixCount, GLboolean transpose, const float* value)
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	//matrixCount:参数表示要发送给OpenGL多少个的举证
+	//trnaspose: 表示是否对矩阵进行置换（行列交换）
+	glUniformMatrix3fv(uniformID, matrixCount, transpose, value);
+}
+
 ShadersManager::ShadersManager()
 {
 	shaderMap_ = NULL;
@@ -306,13 +314,10 @@ void FPS_Camera::ProcessKeyboard(FPS_Camera::ECameraMovement direction, float de
 	//front = glm::normalize(glm::vec3(front.x, 0.0f, front.z));
 	//right = glm::normalize(glm::cross(front, worldUp));
 
-	//std::cout << "move before(" << position.x << "," << position.y << "," << position.z << ")" << std::endl;
-
 	float velocity = speed * delaTime;
 	if (direction == FPS_Camera::ECameraMovement::FORWARD)
 	{
 		position += front * velocity;
-		//std::cout << "after(" << position.x << "," << position.y << "," << position.z << ")" << std::endl;
 	}
 	if (direction == FPS_Camera::ECameraMovement::BACKWARD)
 	{

@@ -34,7 +34,11 @@ void DrawTriangle::Init(const void* context)
 		0.0f,  0.1f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
 	};
 
-	vbo_->SetBufferData(sizeof(vertices), vertices, GL_STATIC_DRAW);
+	//usage:表示的是缓存区会被openGL如何使用，有三个参数：
+	//GL_STATIC_DRAW:表示该缓冲区不会被修改
+	//GL_DYNAMIC_DRAW:表示该缓冲区会被周期性修改
+	//GL_STREAM_DRAW:表示该缓冲区会被频繁修改
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	//参考文档<https://learnopengl-cn.github.io/01%20Getting%20started/05%20Shaders/#_5>
 	//简单来说就是传递进去的数组只是一组一维的数据，而实际情况下，这数据是有多重含义的，所以就需要去指定解释各个数据的含义
@@ -213,8 +217,6 @@ void DrawRectangle::Draw(const void* context)
 	//shader_->SetInt("ourTexture1", 0);
 	//shader_->SetInt("ourTexture2", 1);
 
-	float time = glfwGetTime();
-
 	shader_->Set2f("towards", -1.0f, -1.0f);
 	DrawContext* c= (DrawContext*)context;
 	if (glfwGetKey(c->window_, GLFW_KEY_UP) == GLFW_PRESS) {
@@ -225,20 +227,21 @@ void DrawRectangle::Draw(const void* context)
 	}
 
 	shader_->SetFloat("visibility", Clamp01(visibilityValue_));
-	glm::mat4 trans = glm::mat4(1.0f);
+	mat4 trans = mat4(1.0f);
 
-	trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+	trans = glm::translate(trans, vec3(0.5f, -0.5f, 0.0f));
 
-	trans = glm::rotate(trans, time, glm::vec3(0, 0, 1.0f));
+	trans = glm::rotate(trans, c->time_, vec3(0, 0, 1.0f));
 	shader_->SetMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(trans));
 
 	vao_->Bind();
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-	trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
-	float value = sin(time);
-	trans = glm::scale(trans, glm::vec3(1.0f,1.0f, 1.0f) * Abs(value));
-	trans = glm::rotate(trans, time, glm::vec3(0.0f, 1.0f, 0.0f));
+	trans = glm::translate(trans, vec3(-0.5f, 0.5f, 0.0f));
+	float value = sin(c->time_);
+	value = ABS(value);
+	trans = glm::scale(trans, vec3(1.0f,1.0f, 1.0f) * value);
+	trans = glm::rotate(trans, c->time_, vec3(0.0f, 1.0f, 0.0f));
 	shader_->SetMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(trans));
 
 	vao_->Bind();
@@ -356,10 +359,11 @@ void DrawTwoTriangleUseDiffVAOandVBO::Draw(const void* context)
 	shader_->Use();
 	glBindVertexArray(vaos_[0]);
 
+	DrawContext* c = (DrawContext*)context;
+
 	shader_->SetBoolean("useOffset", true);
-	float time = glfwGetTime();
-	float valueX = sin(time);
-	float valueY = cos(time);
+	float valueX = sin(c->time_);
+	float valueY = cos(c->time_);
 	shader_->Set3f("aPosXYZ", valueX, valueY, 0.0f);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -399,9 +403,10 @@ void DrawDynamicTriangle::Draw(const void* context)
 			0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// top  
 	};
 	
-	float time = glfwGetTime();
-	float cosValue = cos(time);
-	float sinValue = sin(time);
+	DrawContext* c = (DrawContext*)context;
+
+	float cosValue = cos(c->time_);
+	float sinValue = sin(c->time_);
 
 	int index = 0;
 	vertices[index] = sinValue;
@@ -444,8 +449,8 @@ void DrawDynamicTriangle::Draw(const void* context)
 
 	shader_->Use();
 
-	float valueX = sin(time);
-	float valueY = cos(time);
+	float valueX = sin(c->time_);
+	float valueY = cos(c->time_);
 
 	shader_->SetBoolean("useOffset", true);
 	shader_->Set3f("aPosXYZ", valueX, valueY, 0.0f);
@@ -632,26 +637,26 @@ void Draw3D::Draw(const void* context)
 	glBindTexture(GL_TEXTURE_2D, texture2_);
 
 	shader_->Use();
-	float time = glfwGetTime();
+	
 	DrawContext* c = (DrawContext*)context;
 
 	// document: < https://learnopengl-cn.github.io/01%20Getting%20started/08%20Coordinate%20Systems/#_2 >
 	////创建一个模型矩阵
-	//glm::mat4 model = glm::mat4(1.0f);
-	//model = glm::rotate(model, glm::radians(50.0f)*time, glm::vec3(0.5f, 1.0f, 0.0f));
+	//mat4 model = mat4(1.0f);
+	//model = glm::rotate(model, glm::radians(50.0f)*time, vec3(0.5f, 1.0f, 0.0f));
 
 	////创建一个观察矩阵
-	glm::mat4 view = glm::mat4(1.0f);
+	mat4 view = mat4(1.0f);
 	//矩阵要向模型矩阵位移，可以认为是一个相机
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+	view = glm::translate(view, vec3(0.0f, 0.0f, -3.0f));
 
 	//定义一个透视举证，使用透视投影
-	glm::mat4 projection;
+	mat4 projection;
 	projection = glm::perspective(glm::radians(45.0f), c->windowWidth_ / c->windowHeight_, 0.01f, 100.0f);
 
 	//shader_->SetMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-	shader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-	shader_->SetMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
 
 	//shader_->Set2f("towards", -1.0f, -1.0f);
 
@@ -668,11 +673,11 @@ void Draw3D::Draw(const void* context)
 
 	for (uint i = 0; i < 10; i++) 
 	{
-		glm::mat4 model;
+		mat4 model;
 		model = glm::translate(model, cubePositions_[i]);
 		float angle = 0.0f;
 		angle = 20.0f * (i + 1);
-		model = glm::rotate(model, glm::radians(angle)*time, glm::vec3(1.0f, 0.3f, 0.5f));
+		model = glm::rotate(model, glm::radians(angle)*c->time_, vec3(1.0f, 0.3f, 0.5f));
 		shader_->SetMatrix4fv("model",1,GL_FALSE,&model[0][0]);
 
 
@@ -862,13 +867,13 @@ void DrawCamera::Draw(const void* context)
 	glBindTexture(GL_TEXTURE_2D, texture2_);
 
 	shader_->Use();
-	float time = glfwGetTime();
+
 	DrawContext* c = (DrawContext*)context;
 
 	// document: < https://learnopengl-cn.github.io/01%20Getting%20started/09%20Camera/#_1 >
 	////创建一个模型矩阵
-	//glm::mat4 model = glm::mat4(1.0f);
-	//model = glm::rotate(model, glm::radians(50.0f)*time, glm::vec3(0.5f, 1.0f, 0.0f));
+	//mat4 model = mat4(1.0f);
+	//model = glm::rotate(model, glm::radians(50.0f)*time, vec3(0.5f, 1.0f, 0.0f));
 	
 	float speed = cameraSpeed_  * c->delaTime_;
 
@@ -895,23 +900,23 @@ void DrawCamera::Draw(const void* context)
 		//cameraPos_ -= glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
 	}
 
-	glm::mat4 view = glm::mat4(1.0f);
+	mat4 view = mat4(1.0f);
 	//lookAt(eye,center,up)
 	//eye: 相机位置
 	//center:相机指向的目标位置
 	//up:世界坐标中的向上向量
 	//计算出来的矩阵就可以用来作为观察矩阵
 	view = glm::lookAt(cameraPos_, cameraPos_ + cameraFront_, cameraUp_);
-	glm::mat4 v = camera_->GetViewMatrix();
+	mat4 v = camera_->GetViewMatrix();
 	//std::cout << "观察举证 view: \n{\n " << view[0][0] << "," << view[0][1] << "," << view[0][2] << "," << view[0][3] << ",\n"
 	//	<< view[1][0] << "," << view[1][1] << "," << view[1][2] << "," << view[1][3] << ",\n" << view[2][0] << "," << view[2][1] << "," << view[2][2] << "," << view[2][3]
 	//	<< "\n" << view[3][0] << "," << view[3][1] << "," << view[3][2] << "," << view[3][3] << "\n}";
 
-	glm::mat4 projection = glm::mat4(1.0f);
+	mat4 projection = mat4(1.0f);
 	projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
 
-	shader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(v));
-	shader_->SetMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(v));
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
 
 	//shader_->Set2f("towards", -1.0f, -1.0f);
 
@@ -921,11 +926,11 @@ void DrawCamera::Draw(const void* context)
 
 	for (uint i = 0; i < 10; i++)
 	{
-		glm::mat4 model = glm::mat4(1.0f);
+		mat4 model = mat4(1.0f);
 		model = glm::translate(model, cubePositions_[i]);
 		float angle = 0.0f;
 		angle = 20.0f * (i + 1);
-		model = glm::rotate(model, glm::radians(angle) * time, glm::vec3(1.0f, 0.3f, 0.5f));
+		model = glm::rotate(model, glm::radians(angle) * c->time_, vec3(1.0f, 0.3f, 0.5f));
 		shader_->SetMatrix4fv("model", 1, GL_FALSE, &model[0][0]);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
@@ -968,47 +973,47 @@ LightDraw::~LightDraw()
 void LightDraw::Init(const void* context) 
 {
 	float vertices[] = {
-		  -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	1.0f, 1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	1.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	0.0f, 0.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	0.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	0.0f, 0.0f, 0.0f,
 
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	0.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	1.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	0.0f, 0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	0.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,	0.0f, 1.0f, 0.0f,
 
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	1.0f, 0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	0.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	1.0f, 0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	0.0f, 1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	0.0f, 0.0f, 1.0f,
 
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	1.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	0.0f, 1.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	0.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	1.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	0.0f, 0.0f, 1.0f,
 
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	0.0f, 0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	0.0f, 1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	1.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	0.0f, 0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	1.0f, 0.0f, 0.0f,
+			
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	0.0f, 0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	0.0f, 1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,	1.0f, 0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,	0.0f, 0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,	0.0f, 1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	1.0f, 0.0f, 0.0f,
 	};
 
 	vao_->Bind();
@@ -1016,16 +1021,18 @@ void LightDraw::Init(const void* context)
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 	//更改绑定，绑定光照的VAO
 	lightVAO_->Bind();
 	vbo_->Bind();
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(0));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(0));
 	glEnableVertexAttribArray(0);
 }
 
@@ -1035,26 +1042,41 @@ void LightDraw::Draw(const void* context)
 	DrawContext* c = (DrawContext*)context;
 	ProcessInput(c);
 
-	glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
+	vec3 lightPos = vec3(1.2f, 1.0f, 2.0f);
+	vec3 lightColor = vec3(0.341f, 0.945f, 0.976f);
+	lightColor.x = Abs(cos(c->time_));
+	lightColor.y = Abs(sin(c->time_));
+	lightColor.z = Abs(sin(c->time_ + cos(c->time_)));
+	vec3 cubeColor = vec3(1.0f, 0.5f, 0.31f);
+	//vec3 cubeColor = vec3(1.0f, 1.0f, 1.0f);
+
+	//lightPos.x = 1.0f + sin(c->time_) * 2.0f;
+	//lightPos.y = sin(c->time_/2) * 1.0f;
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	//两个3D正方体的共用相同的观察、透视矩阵、model自己重新设置
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::scale(model, glm::vec3(5.0f, 0.2f, 5.0f));
-	glm::mat4 projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
-	glm::mat4 view = camera_->GetViewMatrix();
+	mat4 model = mat4(1.0f);
+	model = glm::rotate(model, glm::radians(c->time_ * 20.0f), vec3(0.0f, 1.0f, 0.0f));
+	mat3 normalMatrix = mat3(1.0);
+	//法线矩阵在CPU这里进行计算 G = (M^-1)^T
+	normalMatrix = glm::transpose(glm::inverse(model));
+	model = glm::scale(model, vec3(5.0f, 0.2f, 5.0f));
+	mat4 projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
+	mat4 view = camera_->GetViewMatrix();
 
 	//第一个绘制第一个vao
 	shader_->Use();
-	shader_->Set3f("objectColor", 1.0f, 0.5f, 0.31f);
-	shader_->Set3f("lightColor", 1.0f, 1.0f, 1.0f);
+	shader_->Set3fv("objectColor", VALUE_PTR(cubeColor));
+	shader_->Set3fv("lightColor",VALUE_PTR(lightColor));
 	shader_->Set3fv("lightPos", &lightPos[0]);
-	shader_->SetMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-	shader_->SetMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-	shader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+	shader_->SetMatrix4fv("model", 1, GL_FALSE, &model[0][0]);
+	shader_->SetMatrix3fv("normalMatrix", 1, GL_FALSE, &normalMatrix[0][0]);
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
 	shader_->Set3fv("viewPos", &camera_->position[0]);
-	shader_->SetFloat("specularStrength", 0.5f);
+	shader_->SetFloat("specularStrength", 0.5f);//设置镜面强度
+	shader_->SetInt("shininess", 256);//设置反射度
 
 	vao_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -1062,13 +1084,14 @@ void LightDraw::Draw(const void* context)
 	//绘制光源，用第二个vao
 	lightShader_->Use();
 
-	model = glm::mat4(1.0f);
+	model = mat4(1.0f);
 	model = glm::translate(model, lightPos);
-	model = glm::scale(model, glm::vec3(0.2f));
+	model = glm::scale(model, vec3(0.2f));
 
-	lightShader_->SetMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-	lightShader_->SetMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
-	lightShader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+	lightShader_->Set3fv("lightColor", VALUE_PTR(lightColor));
+	lightShader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(model));
+	lightShader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+	lightShader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
 	lightVAO_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }

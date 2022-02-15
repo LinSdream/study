@@ -60,6 +60,7 @@ std::string ReadFile(const char* path)
 	}
 }
 
+
 float Clamp01(float value) 
 {
 	if (value >= 1.0f) return 1.0f;

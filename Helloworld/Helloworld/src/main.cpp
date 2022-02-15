@@ -64,16 +64,18 @@ void Update(Window* w,GLFWwindow* window, double delaTime,void*context)
 {
 	Context *c= (Context*)context;
 	
+	float time = static_cast<float>(glfwGetTime());
+
 	DrawContext drawContext;
 	drawContext.window_ = window;
 	drawContext.windowHeight_ = w->GetHeight();
 	drawContext.windowWidth_ = w->GetWeight();
 	drawContext.delaTime_ = delaTime;
+	drawContext.time_ = time;
 
 	c->env_->Background(window);
 	c->env_->PressInput(window);
 
-	float time = glfwGetTime();
 	int count = c->DrawsCount();
 	c->draws_[2]->Draw(&drawContext);
 	//for (int i = 0; i < count; i++)

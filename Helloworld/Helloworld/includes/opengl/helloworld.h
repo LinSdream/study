@@ -6,6 +6,12 @@
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
+typedef glm::vec3 vec3;
+typedef glm::mat4 mat4;
+typedef glm::mat3 mat3;
+
+#define VALUE_PTR(value) glm::value_ptr(value)
+
 class HelloworldGradientEnvironment:public HelloworldEnvironment
 {
 public:
@@ -77,6 +83,7 @@ struct DrawContext
 	float windowHeight_;
 	float windowWidth_;
 	float delaTime_;
+	float time_;
 };
 
 class DrawTriangle:public DrawBase

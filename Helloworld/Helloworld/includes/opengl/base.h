@@ -247,6 +247,7 @@ public:
 	void SetBoolean(const char* name, bool value);
 	void SetInt(const char* name, int value);
 	void SetMatrix4fv(const char* name,int matrixCount, GLboolean transpose, const float* value);
+	void SetMatrix3fv(const char* name,int matrixCount, GLboolean transpose, const float* value);
 
 private:
 
