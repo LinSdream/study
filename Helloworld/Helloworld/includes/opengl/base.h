@@ -7,156 +7,166 @@
 #include<iostream>
 #include<map>
 #include <list>
-
-namespace MySpace
-{
-	class IDelegate
-	{
-	public:
-		virtual ~IDelegate() {};
-		virtual bool IsType(const std::type_info& type) = 0;
-		virtual void Invoke() = 0;
-		virtual bool Compare(IDelegate* del) const = 0;
-	};
-
-	class StaticDelegate :public IDelegate
-	{
-	public:
-		typedef void (*Func)();
-		StaticDelegate(Func func) :func_(func) {}
-		virtual bool IsType(const std::type_info& type) { return type == typeid(StaticDelegate); }
-		virtual void Invoke() { func_(); }
-		virtual bool Compare(IDelegate* del) const
-		{
-			if (del == NULL || !del->IsType(typeid(StaticDelegate))) return false;
-			StaticDelegate* cast = static_cast<StaticDelegate*>(del);
-			return cast->func_ == func_;
-		}
-
-	private:
-		Func func_;
-	};
-
-	template<class T>
-	class MethodDelegate :public IDelegate
-	{
-
-	public:
-		typedef void(T::* Method)();
-		MethodDelegate(T* _obj, Method _method) :obj_(_obj), method_(_method){};
-		virtual bool IsType(const std::type_info& type) { return typeid(MethodDelegate) == type; };
-		virtual void Invoke() { (obj_->*method_)(); }//->*method_; }
-		virtual bool Compare(IDelegate* del) const
-		{
-			if (del == NULL || !del->IsType(typeid(MethodDelegate<T>))) return false;
-			MethodDelegate* cast = static_cast<MethodDelegate<T>*>(del);
-			return cast->obj_ == obj_ && cast->method_ == method_;
-		}
-
-	private:
-		T* obj_;
-		Method method_;
-	};
-
-	inline IDelegate* NewDelegate(void(*func)())
-	{
-		return new StaticDelegate(func);
-	}
-
-	template<class T>
-	inline IDelegate* NewDelegate(T* obj, void (T::* method_)())
-	{
-		return new MethodDelegate<T>(obj, method_);
-	}
-
-
-	class Delegate
-	{
-
-	public:
-
-		typedef std::list<IDelegate*> ListDelegate;
-		typedef ListDelegate::iterator ListDelegateIter;
-		typedef ListDelegate::const_iterator ConstListDelegteIter;
-
-		Delegate() {};
-		~Delegate() { Clear(); }
-		bool Empty() const
-		{
-			for (ConstListDelegteIter iter = delegates_.begin();iter != delegates_.end();++iter)
-			{
-				if (*iter) return false;
-			}
-			return true;
-		}
-
-		void Clear()
-		{
-			for (ListDelegateIter iter = delegates_.begin();iter != delegates_.end();++iter)
-			{
-				if (*iter)
-				{
-					delete (*iter);
-					(*iter) = NULL;
-				}
-			}
-		}
-		Delegate& operator+=(IDelegate* del)
-		{
-			for (ListDelegateIter iter = delegates_.begin();iter != delegates_.end();++iter)
-			{
-				if ((*iter) && (*iter)->Compare(del))
-				{
-					delete del;
-					return *this;
-				}
-			}
-			delegates_.push_back(del);
-			return *this;
-		}
-
-
-		Delegate& operator-=(IDelegate* del)
-		{
-			for (ListDelegateIter iter = delegates_.begin();iter != delegates_.end();++iter)
-			{
-				if ((*iter) != del && (*iter)->Compare(del))
-				{
-					if ((*iter) != del) delete (*iter);
-					(*iter) = NULL;
-					break;
-				}
-			}
-
-			delete del;
-			return *this;
-		}
-		void operator()()
-		{
-			ListDelegateIter iter = delegates_.begin();
-			while (iter != delegates_.end())
-			{
-				if ((*iter) == NULL)
-				{
-					iter = delegates_.erase(iter);
-				}
-				else
-				{
-					(*iter)->Invoke();
-					++iter;
-				}
-			}
-		}
-
-
-	private:
-
-		//Delegate(const Delegate& _event);
-		//Delegate& operator = (const Delegate& _event);
-
-		ListDelegate delegates_;
-	};
-}
+#include<vector>
+//
+//namespace MySpace
+//{
+//
+//	template<typename ReturnType,typename ...ParamType>
+//	class IDelegate
+//	{
+//	public:
+//		virtual ~IDelegate() {};
+//		virtual bool IsType(const std::type_info& type) = 0;
+//		virtual ReturnType Invoke(ParamType... params) = 0;
+//		virtual bool Compare(IDelegate<ReturnType, ParamType...>* del) const = 0;
+//	};
+//
+//	template<typename ReturnType, typename ...ParamType>
+//	class StaticDelegate :public IDelegate<ReturnType, ParamType...>
+//	{
+//	public:
+//		typedef ReturnType (*Func)(ParamType...);
+//		StaticDelegate(Func func) :func_(func) {}
+//		virtual bool IsType(const std::type_info& type) { return type == typeid(StaticDelegate<ReturnType, ParamType...>); }
+//		virtual ReturnType Invoke(ParamType... params) { func_(params); }
+//		virtual bool Compare(IDelegate<ReturnType,ParamType...>* del) const
+//		{
+//			if (del == NULL || !del->IsType(typeid(StaticDelegate<ReturnType,ParamType...>))) return false;
+//			StaticDelegate<ReturnType, ParamType...>* cast = static_cast<StaticDelegate<ReturnType, ParamType...>*>(del);
+//			return cast->func_ == func_;
+//		}
+//
+//	private:
+//		Func func_;
+//	};
+//
+//	template<typename T, typename ReturnType, typename ...ParamType>
+//	class MethodDelegate :public IDelegate<ReturnType, ParamType...>
+//	{
+//
+//	public:
+//		typedef ReturnType(T::* Method)(ParamType...);
+//		MethodDelegate(T* _obj, Method _method) :obj_(_obj), method_(_method){};
+//		virtual bool IsType(const std::type_info& type) { return typeid(MethodDelegate<T, ReturnType, ParamType...>) == type; };
+//		virtual ReturnType Invoke(ParamType params) { (obj_->*method_)(params); }//->*method_; }
+//		virtual bool Compare(IDelegate<ReturnType, ParamType...>* del) const
+//		{
+//			if (del == NULL || !del->IsType(typeid(MethodDelegate<T,ReturnType, ParamType...>))) return false;
+//			MethodDelegate<T, ReturnType, ParamType...>* cast = static_cast<MethodDelegate<T, ReturnType, ParamType...>*>(del);
+//			return cast->obj_ == obj_ && cast->method_ == method_;
+//		}
+//
+//	private:
+//		T* obj_;
+//		Method method_;
+//	};
+//
+//
+//	template<typename T>
+//	inline StaticDelegate<T>* NewDelegate(void(*func)())
+//	{
+//		return new StaticDelegate<T>(func);
+//	}
+//
+//	template<typename T, typename K>
+//	inline MethodDelegate<T,K>* NewDelegate(T* obj, void (T::* method_)())
+//	{
+//		return new MethodDelegate<T,K>(obj, method_);
+//	}
+//
+//	template<typename ReturnType, typename ...ParamType>
+//	class Delegate
+//	{
+//
+//	public:
+//
+//		typedef std::list<IDelegate<ReturnType, ParamType...>*> ListDelegate;
+//		typedef ListDelegate::iterator ListDelegateIter;
+//		typedef ListDelegate::const_iterator ConstListDelegteIter;
+//
+//		Delegate() {};
+//		~Delegate() { Clear(); }
+//		bool Empty() const
+//		{
+//			for (ConstListDelegteIter iter = delegates_.begin();iter != delegates_.end();++iter)
+//			{
+//				if (*iter) return false;
+//			}
+//			return true;
+//		}
+//
+//		void Clear()
+//		{
+//			for (ListDelegateIter iter = delegates_.begin();iter != delegates_.end();++iter)
+//			{
+//				if (*iter)
+//				{
+//					delete (*iter);
+//					(*iter) = NULL;
+//				}
+//			}
+//		}
+//
+//		Delegate<ReturnType,ParamType...>& operator+=(IDelegate<ReturnType,ParamType...>* del)
+//		{
+//			for (ListDelegateIter iter = delegates_.begin();iter != delegates_.end();++iter)
+//			{
+//				if ((*iter) && (*iter)->Compare(del))
+//				{
+//					delete del;
+//					return *this;
+//				}
+//			}
+//			delegates_.push_back(del);
+//			return *this;
+//		}
+//
+//		Delegate<ReturnType, ParamType>& operator-=(IDelegate<ReturnType, ParamType>* del)
+//		{
+//			for (ListDelegateIter iter = delegates_.begin();iter != delegates_.end();++iter)
+//			{
+//				if ((*iter) != del && (*iter)->Compare(del))
+//				{
+//					if ((*iter) != del) delete (*iter);
+//					(*iter) = NULL;
+//					break;
+//				}
+//			}
+//
+//			delete del;
+//			return *this;
+//		}
+//
+//		std::vector<ReturnType> operator()(ParamType... params)
+//		{
+//			ListDelegateIter iter = delegates_.begin();
+//			std::vector<ReturnType> results;
+//
+//			while (iter != delegates_.end())
+//			{
+//				if ((*iter) == NULL)
+//				{
+//					iter = delegates_.erase(iter);
+//				}
+//				else
+//				{
+//					results.push_back((*iter)->Invoke());
+//					++iter;
+//				}
+//			}
+//			return results;
+//		}
+//
+//
+//	private:
+//
+//		//Delegate(const Delegate& _event);
+//		//Delegate& operator = (const Delegate& _event);
+//
+//		ListDelegate delegates_;
+//	};
+//}
 
 class HelloworldEnvironment
 {
@@ -228,8 +238,11 @@ public:
 	int InitiationStatus() { return code_; }
 
 	void Set4f(const char* name, float x, float y, float z, float w);
+	void Set4fv(const char* name, const float* value);
 	void Set3f(const char* name, float x, float y, float z);
+	void Set3fv(const char* name, const float* value);
 	void Set2f(const char* name, float x, float y);
+	void Set2fv(const char* name, const float* value);
 	void SetFloat(const char* name, float value);
 	void SetBoolean(const char* name, bool value);
 	void SetInt(const char* name, int value);

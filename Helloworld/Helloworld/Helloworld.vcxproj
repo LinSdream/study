@@ -39,9 +39,13 @@
     <ClCompile Include="src\Window\window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Shaders\light_cube.fs" />
+    <None Include="..\Shaders\light_cube.vs" />
     <None Include="..\Shaders\hello3d.vs" />
     <None Include="..\Shaders\helloworld.fs" />
     <None Include="..\Shaders\helloworld.vs" />
+    <None Include="..\Shaders\light.fs" />
+    <None Include="..\Shaders\light.vs" />
     <None Include="..\Shaders\textures.fs" />
     <None Include="..\Shaders\textures.vs" />
   </ItemGroup>

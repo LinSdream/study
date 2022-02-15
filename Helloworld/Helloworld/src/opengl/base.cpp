@@ -128,16 +128,34 @@ void Shader::Set4f(const char* name, float x, float y, float z, float w)
 	glUniform4f(uniformID, x, y, z, w);
 }
 
+void Shader::Set4fv(const char* name, const float* value)
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	glUniform4fv(uniformID, 1, value);
+}
+
 void Shader::Set3f(const char* name, float x, float y, float z)
 {
 	int uniformID = glGetUniformLocation(programID_, name);
 	glUniform3f(uniformID, x, y, z);
 }
 
+void Shader::Set3fv(const char* name, const float* value) 
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	glUniform3fv(uniformID, 1, value);
+}
+
 void Shader::Set2f(const char* name, float x, float y)
 {
 	int uniformID = glGetUniformLocation(programID_, name);
 	glUniform2f(uniformID, x, y);
+}
+
+void Shader::Set2fv(const char* name, const float* value)
+{
+	int uniformID = glGetUniformLocation(programID_, name);
+	glUniform2fv(uniformID, 1, value);
 }
 
 void Shader::SetFloat(const char* name, float value)
@@ -285,13 +303,16 @@ FPS_Camera::FPS_Camera(float _posX, float _posY, float _posZ, float _upX, float 
 void FPS_Camera::ProcessKeyboard(FPS_Camera::ECameraMovement direction, float delaTime)
 {
 
-	front = glm::normalize(glm::vec3(front.x, 0.0f, front.z));
-	right = glm::normalize(glm::cross(front, worldUp));
+	//front = glm::normalize(glm::vec3(front.x, 0.0f, front.z));
+	//right = glm::normalize(glm::cross(front, worldUp));
+
+	//std::cout << "move before(" << position.x << "," << position.y << "," << position.z << ")" << std::endl;
 
 	float velocity = speed * delaTime;
 	if (direction == FPS_Camera::ECameraMovement::FORWARD)
 	{
 		position += front * velocity;
+		//std::cout << "after(" << position.x << "," << position.y << "," << position.z << ")" << std::endl;
 	}
 	if (direction == FPS_Camera::ECameraMovement::BACKWARD)
 	{
@@ -305,7 +326,6 @@ void FPS_Camera::ProcessKeyboard(FPS_Camera::ECameraMovement direction, float de
 	{
 		position -= right * velocity;
 	}
-	position.y = 0.0f;
 }
 
 void FPS_Camera::UpdateCameraVectors() 
@@ -328,7 +348,7 @@ void FPS_Camera::UpdateCameraVectors()
 	_front.y = sin(rPitch);
 	_front.z = sin(rYaw) * cos(rPitch);
 	front = glm::normalize(_front);
-
+	//std::cout << "Front: (" << front.x << "," << front.y << "," << front.z << ")" << std::endl;
 	right = glm::normalize(glm::cross(front, worldUp));
 	up = glm::normalize(glm::cross(right, front));
 
@@ -368,8 +388,6 @@ glm::mat4 FPS_Camera::CalculateLookAtMatrix(glm::vec3 position, glm::vec3 target
 
 void FPS_Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch)
 {
-	std::cout << "(" << xoffset << "," << yoffset << "£©" << std::endl;
-
 	xoffset *= mouseSensitivity;
 	yoffset *= mouseSensitivity;
 

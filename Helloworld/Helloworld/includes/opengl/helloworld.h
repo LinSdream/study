@@ -214,7 +214,6 @@ public:
 	void Draw(const void* context);
 	void Init(const void* context);
 	void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
-	void MousePositionMovement(double posX, double posY);
 
 private:
 
@@ -251,4 +250,36 @@ private:
 		glm::vec3(1.5f,  0.2f, -1.5f),
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
+};
+
+class LightDraw :public DrawBase
+{
+public:
+
+	LightDraw(Shader* shader, Shader* lightShader,FPS_Camera* camera);
+	~LightDraw();
+
+	void Draw(const void* context);
+	void Init(const void* context);
+	void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
+
+private:
+
+	Shader* lightShader_;
+	VAOContext* vao_;
+	VAOContext* lightVAO_;
+	VBOContext* vbo_;
+
+	bool firstMouse_;
+	float lastX_;
+	float lastY_;
+	float yaw_;
+	float pitch_;
+
+	glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
+	float cameraSpeed_ = 2.5f;
+
+	void ProcessInput(DrawContext* c);
 };

@@ -5,7 +5,8 @@
 
 void HelloworldGradientEnvironment::Background(GLFWwindow* window)
 {
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -322,7 +323,6 @@ void DrawTwoTriangleUseDiffVAOandVBO::Init(const void* context)
 		0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,// top   
 	};
 
-
 	float secondVertices[] = {
 		0.0f, 0.0f, 0.0f,0.0f, 0.0f, 1.0f,// left
 		0.5f, 1.0f, 0.0f,0.0f, 1.0f, 0.0f, // right 
@@ -374,7 +374,6 @@ DrawDynamicTriangle::DrawDynamicTriangle(Shader* shader):DrawBase(shader)
 {
 	vao_ = new VAOContext();
 	vbo_ = new VBOContext();
-
 }
 
 DrawDynamicTriangle::~DrawDynamicTriangle()
@@ -934,8 +933,6 @@ void DrawCamera::Draw(const void* context)
 
 void DrawCamera::MoveCamera(float xpos, float ypos, bool constrainPitch) 
 {
-	//MousePositionMovement(xpos, ypos);
-	//return;
 	if (firstMouse_) 
 	{
 		lastX_ = xpos;
@@ -953,39 +950,169 @@ void DrawCamera::MoveCamera(float xpos, float ypos, bool constrainPitch)
 
 }
 
-void DrawCamera::MousePositionMovement(double posX, double posY) 
+LightDraw::LightDraw(Shader* shader, Shader* lightShader,FPS_Camera* camera) :DrawBase(shader, camera)
 {
-	if (firstMouse_) 
+	lightShader_ = lightShader;
+	vao_ = new VAOContext();
+	vbo_ = new VBOContext();
+	lightVAO_ = new VAOContext();
+}
+
+LightDraw::~LightDraw() 
+{
+	delete vao_;
+	delete vbo_;
+	delete lightVAO_;
+}
+
+void LightDraw::Init(const void* context) 
+{
+	float vertices[] = {
+		  -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+	};
+
+	vao_->Bind();
+	vbo_->Bind();
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	//更改绑定，绑定光照的VAO
+	lightVAO_->Bind();
+	vbo_->Bind();
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(0));
+	glEnableVertexAttribArray(0);
+}
+
+void LightDraw::Draw(const void* context) 
+{
+
+	DrawContext* c = (DrawContext*)context;
+	ProcessInput(c);
+
+	glm::vec3 lightPos = glm::vec3(1.2f, 1.0f, 2.0f);
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	//两个3D正方体的共用相同的观察、透视矩阵、model自己重新设置
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::scale(model, glm::vec3(5.0f, 0.2f, 5.0f));
+	glm::mat4 projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
+	glm::mat4 view = camera_->GetViewMatrix();
+
+	//第一个绘制第一个vao
+	shader_->Use();
+	shader_->Set3f("objectColor", 1.0f, 0.5f, 0.31f);
+	shader_->Set3f("lightColor", 1.0f, 1.0f, 1.0f);
+	shader_->Set3fv("lightPos", &lightPos[0]);
+	shader_->SetMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+	shader_->Set3fv("viewPos", &camera_->position[0]);
+	shader_->SetFloat("specularStrength", 0.5f);
+
+	vao_->Bind();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	//绘制光源，用第二个vao
+	lightShader_->Use();
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, lightPos);
+	model = glm::scale(model, glm::vec3(0.2f));
+
+	lightShader_->SetMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
+	lightShader_->SetMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
+	lightShader_->SetMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
+	lightVAO_->Bind();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+
+void LightDraw::MoveCamera(float xpos, float ypos, bool constrainPitch)
+{
+	if (firstMouse_)
 	{
-		lastX_ = posX;
-		lastY_ = posY;
+		lastX_ = xpos;
+		lastY_ = ypos;
 		firstMouse_ = false;
 	}
 
-	float offsetX = posX - lastX_;
-	//这里之所以相反是因为glfwSetCursorPosCallback返回的x,y是相对有窗口的左上角位置，因此 y的偏移量是：-(posy - lastY) -> lastY - posy
-	float offsetY = lastY_ - posY;
-	//std::cout << "鼠标位置:( " << posX << "," << posY << ")";
+	float xoffset = xpos - lastX_;
+	float yoffset = lastY_ - ypos;
 
-	lastX_ = posX;
-	lastY_ = posY;
+	lastX_ = xpos;
+	lastY_ = ypos;
 
-	//鼠标灵敏度
-	float sensitivity = 0.05f;
+	camera_->ProcessMouseMovement(xoffset, yoffset, constrainPitch);
 
-	offsetX *= sensitivity;
-	offsetY *= sensitivity;
+}
 
-	yaw_ += offsetX;
-	pitch_ += offsetY;
+void LightDraw::ProcessInput(DrawContext* c) 
+{
 
-	pitch_ = Clamp(pitch_, 89.0f, -89.0f);
-	glm::vec3 front = glm::vec3(1.0f);
-	float radianYaw = glm::radians(yaw_);
-	float radianPitch = glm::radians(pitch_);
-	front.x = cos(radianYaw) * cos(radianPitch);
-	front.y = sin(radianPitch);
-	front.z = sin(radianYaw) * cos(radianYaw);
-	cameraFront_ = glm::normalize(front);
-	std::cout << "Front: (" << cameraFront_.x << "," << cameraFront_.y << "," << cameraFront_.z << ")" << std::endl;
+	float speed = cameraSpeed_ * c->delaTime_;
+
+	if (glfwGetKey(c->window_, GLFW_KEY_W) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, c->delaTime_);
+		//cameraPos_ += speed * cameraFront_;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_S) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, c->delaTime_);
+		//cameraPos_ -= speed * cameraFront_;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_D) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, c->delaTime_);
+		//cameraPos_ += glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, c->delaTime_);
+		//cameraPos_ -= glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
+	}
+
 }

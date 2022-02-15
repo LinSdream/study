@@ -36,7 +36,7 @@ int main()
 		{
 			void* context = glfwGetWindowUserPointer(window);
 			Context* c = static_cast<Context*>(context);
-			c->draws_[1]->MoveCamera(posX, posY);
+			c->draws_[2]->MoveCamera(posX, posY);
 		});
 
 	//window->RegisterMouseScroll_Callback([](GLFWwindow* window, double xoffset, double yoffset) 
@@ -75,7 +75,7 @@ void Update(Window* w,GLFWwindow* window, double delaTime,void*context)
 
 	float time = glfwGetTime();
 	int count = c->DrawsCount();
-	c->draws_[1]->Draw(&drawContext);
+	c->draws_[2]->Draw(&drawContext);
 	//for (int i = 0; i < count; i++)
 	//{
 	//	c->draws_[i]->Draw(&drawContext);
@@ -87,20 +87,23 @@ Context* CreateContext(int* code)
 
 	Context* context = new Context();
 	context->shaderManager_ = new ShadersManager();
-	context->camera_ = new FPS_Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+	context->camera_ = new FPS_Camera(glm::vec3(0.0f,3.0f, 3.0f));
 	ShadersManager* sm = context->shaderManager_;
 
 	//这里需要判定，懒得写了
 	sm->CreateShader("helloWorld", "../Shaders/helloworld.vs", "../Shaders/helloworld.fs");
 	sm->CreateShader("texture", "../Shaders/textures.vs", "../Shaders/textures.fs");
 	sm->CreateShader("hello3D", "../Shaders/hello3d.vs", "../Shaders/textures.fs");
+	sm->CreateShader("light", "../Shaders/light.vs", "../Shaders/light.fs");
+	sm->CreateShader("light_cube","../Shaders/light_cube.vs", "../Shaders/light_cube.fs");
 
 	context->env_ = new HelloworldGradientEnvironment();
 
-	context->InitDraws(2);
+	context->InitDraws(3);
 
 	context->draws_[0] = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
 	context->draws_[1] = new DrawCamera((*sm)["hello3D"], context->camera_);
+	context->draws_[2] = new LightDraw((*sm)["light"], (*sm)["light_cube"], context->camera_);
 
 	*code = SUCCESS;
 
