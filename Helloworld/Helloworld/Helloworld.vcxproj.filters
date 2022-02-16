@@ -100,6 +100,12 @@
     <None Include="..\Shaders\light_cube.vs">
       <Filter>资源文件\shaders</Filter>
     </None>
+    <None Include="..\Shaders\lightmap.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="..\Shaders\lightmap.vs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\awesomeface.png">
@@ -109,6 +115,9 @@
       <Filter>资源文件\assets</Filter>
     </Image>
     <Image Include="assets\textures\wall.jpg">
+      <Filter>资源文件\assets</Filter>
+    </Image>
+    <Image Include="assets\textures\container2.png">
       <Filter>资源文件\assets</Filter>
     </Image>
   </ItemGroup>

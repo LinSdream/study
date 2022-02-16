@@ -234,13 +234,13 @@ bool ShadersManager::CreateShader(std::string shaderName, const char* vsPath, co
 	return true;
 }
 
-bool ShadersManager::NullOrEmpty()
+bool ShadersManager::NullOrEmpty() const
 {
 	if (shaderMap_ == NULL) return true;
 	return shaderMap_->empty();
 }
 
-Shader* ShadersManager::GetShader(std::string shaderName)
+Shader* ShadersManager::GetShader(std::string shaderName) const
 {
 	if (shaderMap_ == NULL) return NULL;
 	if (shaderMap_->empty()) return NULL;
@@ -254,7 +254,7 @@ Shader* ShadersManager::operator[](std::string shaderName)
 	return GetShader(shaderName);
 }
 
-int ShadersManager::GetShaderCount()
+int ShadersManager::GetShaderCount() const
 {
 	if (shaderMap_ == NULL) return 0;
 	return shaderMap_->size();

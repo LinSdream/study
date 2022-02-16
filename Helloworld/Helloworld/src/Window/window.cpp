@@ -85,17 +85,17 @@ Window::~Window()
 	glfwTerminate();
 }
 
-int Window::GetInitializeStatus() 
+int Window::GetInitializeStatus() const
 {
 	return init_code_;
 }
 
-int Window::GetHeight() 
+int Window::GetHeight() const
 {
 	return height_;
 }
 
-int Window::GetWeight()
+int Window::GetWeight() const
 {
 	return weight_;
 }

@@ -233,9 +233,9 @@ public:
 	Shader(char* vertex, char* fragment);
 	~Shader();
 
-	void Use() { glUseProgram(programID_); }
-	uint GetID() { return programID_; }
-	int InitiationStatus() { return code_; }
+	void Use() const { glUseProgram(programID_); }
+	uint GetID() const { return programID_; }
+	int InitiationStatus() const { return code_; }
 
 	void Set4f(const char* name, float x, float y, float z, float w);
 	void Set4fv(const char* name, const float* value);
@@ -266,10 +266,10 @@ public:
 	~ShadersManager();
 
 	bool CreateShader(std::string shaderName, const char* vsPath, const char* fsPath);
-	Shader* GetShader(std::string shaderName);
+	Shader* GetShader(std::string shaderName) const;
 	bool RemoveShader(std::string shaderName);
-	int GetShaderCount();
-	bool NullOrEmpty();
+	int GetShaderCount() const;
+	bool NullOrEmpty() const;
 	void Recycle(Shader* shader);
 
 	Shader* operator[](std::string shaderName);

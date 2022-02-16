@@ -21,9 +21,9 @@ public:
 	void RegisterMouseScroll_Callback(GLFWscrollfun cb);
 
 	void Update(RelRenderFun render_fun);
-	int GetInitializeStatus();
-	int GetHeight();
-	int GetWeight();
+	int GetInitializeStatus() const;
+	int GetHeight() const;
+	int GetWeight() const;
 
 	void Bind(void* context);
 	void UnBind();

@@ -39,6 +39,8 @@
     <ClCompile Include="src\Window\window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Shaders\lightmap.fs" />
+    <None Include="..\Shaders\lightmap.vs" />
     <None Include="..\Shaders\light_cube.fs" />
     <None Include="..\Shaders\light_cube.vs" />
     <None Include="..\Shaders\hello3d.vs" />
@@ -52,6 +54,7 @@
   <ItemGroup>
     <Image Include="assets\textures\awesomeface.png" />
     <Image Include="assets\textures\container.jpg" />
+    <Image Include="assets\textures\container2.png" />
     <Image Include="assets\textures\wall.jpg" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -79,3 +79,4 @@ float Abs(float value)
 {
 	return value < 0.0f ? -value : value;
 }
+

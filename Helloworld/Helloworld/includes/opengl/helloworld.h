@@ -12,6 +12,8 @@ typedef glm::mat3 mat3;
 
 #define VALUE_PTR(value) glm::value_ptr(value)
 
+bool LoadImage2D(uint* textureID, const char* path, GLint wrapST_param, GLint filter_param);
+
 class HelloworldGradientEnvironment:public HelloworldEnvironment
 {
 public:
@@ -33,6 +35,11 @@ public:
 	virtual void MoveCamera(float xpos, float ypos, bool constrainPitch = true)
 	{
 		camera_->ProcessMouseMovement(xpos, ypos, constrainPitch);
+	}
+
+	virtual void CameraScroll(float yoffset) 
+	{
+		camera_->ProcessMouseScroll(yoffset);
 	}
 
 protected:
@@ -65,7 +72,8 @@ public:
 		if (draws_ == NULL) return;
 		for (int i = 0; i < drawsCount_; i++)
 		{
-			if(draws_[i] != NULL) delete draws_[i];
+			if(draws_[i] != NULL)
+				delete draws_[i];
 		}
 		delete draws_;
 	}
@@ -259,6 +267,39 @@ private:
 	};
 };
 
+class DrawSphere :public DrawBase
+{
+
+public:
+
+	DrawSphere(Shader* shader, FPS_Camera* camera);
+	~DrawSphere();
+
+	void Draw(const void* context);
+	void Init(const void* context);
+	void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
+
+private:
+
+
+	VAOContext* vao_;
+	EBOContext* ebo_;
+	VBOContext* vbo_;
+
+	float visibilityValue_;
+	bool firstMouse_;
+	float lastX_;
+	float lastY_;
+	float yaw_;
+	float pitch_;
+
+	glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
+	float cameraSpeed_ = 2.5f;
+};
+
+
 class LightDraw :public DrawBase
 {
 public:
@@ -276,6 +317,42 @@ private:
 	VAOContext* vao_;
 	VAOContext* lightVAO_;
 	VBOContext* vbo_;
+
+	bool firstMouse_;
+	float lastX_;
+	float lastY_;
+	float yaw_;
+	float pitch_;
+
+	glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
+	float cameraSpeed_ = 2.5f;
+
+	void ProcessInput(DrawContext* c);
+};
+
+class LightingMapsDraw :public DrawBase 
+{
+
+public:
+	LightingMapsDraw(Shader* shader, Shader* lightShader, FPS_Camera* camera);
+	~LightingMapsDraw();
+
+	void Draw(const void* context);
+	void Init(const void* context);
+	void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
+
+private:
+
+	Shader* lightShader_;
+	VAOContext* vao_;
+	VAOContext* lightVAO_;
+	VBOContext* vbo_;
+
+	uint diffuseTex_;
+	uint specularTex_;
+	uint emissionTex_;
 
 	bool firstMouse_;
 	float lastX_;

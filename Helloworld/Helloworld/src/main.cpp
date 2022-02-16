@@ -39,11 +39,11 @@ int main()
 			c->draws_[2]->MoveCamera(posX, posY);
 		});
 
-	//window->RegisterMouseScroll_Callback([](GLFWwindow* window, double xoffset, double yoffset) 
-	//	{
-	//		void* context = glfwGetWindowUserPointer(window);
-	//		Context* c = static_cast<Context*>(context);
-	//	});
+	window->RegisterMouseScroll_Callback([](GLFWwindow* window, double xpos, double ypos) {
+			void* context = glfwGetWindowUserPointer(window);
+			Context* c = static_cast<Context*>(context);
+			c->draws_[2]->CameraScroll(static_cast<float>(ypos));
+		});
 
 	int count = context->DrawsCount();
 	for (int i = 0; i < count; i++)
@@ -98,14 +98,16 @@ Context* CreateContext(int* code)
 	sm->CreateShader("hello3D", "../Shaders/hello3d.vs", "../Shaders/textures.fs");
 	sm->CreateShader("light", "../Shaders/light.vs", "../Shaders/light.fs");
 	sm->CreateShader("light_cube","../Shaders/light_cube.vs", "../Shaders/light_cube.fs");
+	sm->CreateShader("lightmap","../Shaders/lightmap.vs", "../Shaders/lightmap.fs");
 
 	context->env_ = new HelloworldGradientEnvironment();
 
-	context->InitDraws(3);
+	context->InitDraws(4);
 
 	context->draws_[0] = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
 	context->draws_[1] = new DrawCamera((*sm)["hello3D"], context->camera_);
-	context->draws_[2] = new LightDraw((*sm)["light"], (*sm)["light_cube"], context->camera_);
+	context->draws_[2] = new LightingMapsDraw((*sm)["lightmap"], (*sm)["light_cube"], context->camera_);
+	context->draws_[3] = new LightDraw((*sm)["light"], (*sm)["light_cube"], context->camera_);
 
 	*code = SUCCESS;
 
@@ -116,9 +118,13 @@ void DestroyContext(Context* context)
 {
 	if (!context) return;
 	if (context->env_) delete context->env_;
-
+	
 	context->RecycleDraws();
+
+	if (context->camera_) delete context->camera_;
+
 	if (context->shaderManager_) delete context->shaderManager_;
+
 	delete context;
 }
 

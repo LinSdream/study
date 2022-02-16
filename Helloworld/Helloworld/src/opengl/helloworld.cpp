@@ -3,6 +3,38 @@
 #include<stb/stb_image.h>
 #include<windows/window.h>
 
+bool LoadImage2D(uint* textureID, const char* path, GLint wrapST_param, GLint filter_param)
+{
+
+	stbi_set_flip_vertically_on_load(true);
+	int width, height, nrChannels;
+	uchar* image = stbi_load(path, &width, &height, &nrChannels, 0);
+	if (!image)
+	{
+		std::cout << "Texture failed to load at path: " << path << std::endl;
+		stbi_image_free(image);
+		return false;
+	}
+
+	glBindTexture(GL_TEXTURE_2D, *textureID);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapST_param);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapST_param);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_param);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_param);
+
+	GLenum format;
+	if (nrChannels == 1) format = GL_RED;
+	else if (nrChannels == 3) format = GL_RGB;
+	else if (nrChannels == 4) format = GL_RGBA;
+
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	stbi_image_free(image);
+	return true;
+}
+
 void HelloworldGradientEnvironment::Background(GLFWwindow* window)
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -955,6 +987,150 @@ void DrawCamera::MoveCamera(float xpos, float ypos, bool constrainPitch)
 
 }
 
+DrawSphere::DrawSphere(Shader* shader, FPS_Camera* camera) :DrawBase(shader, camera)
+{
+	vao_ = new VAOContext();
+	ebo_ = new EBOContext();
+	vbo_ = new VBOContext();
+}
+
+DrawSphere::~DrawSphere()
+{
+	delete vao_;
+	delete ebo_;
+	delete vbo_;
+}
+
+void DrawSphere::Init(const void* context)
+{
+	Window* w = (Window*)context;
+
+	//w->RegisterMousePosition(([](GLFWwindow* window, double xpos, double ypos) {Mouse_Callback(window, xpos, ypos);}));
+
+	//OpenGL 通过glEnable 与 glDisable 来控制开启或关闭一些功能，直到调用对应的功能来关闭为止
+	//这里选择开启深度测试
+	glEnable(GL_DEPTH_TEST);
+
+	vao_->Bind();
+	vbo_->Bind();
+
+	std::vector<float> vertices;
+
+
+
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(float)*count, vertices, GL_DYNAMIC_DRAW);
+
+	ebo_->Bind();
+
+
+
+	uint indices[] =
+	{
+		0,1,3,
+		1,2,3,
+	};
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(5 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+}
+
+void DrawSphere::Draw(const void* context)
+{
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	shader_->Use();
+
+	DrawContext* c = (DrawContext*)context;
+
+	// document: < https://learnopengl-cn.github.io/01%20Getting%20started/09%20Camera/#_1 >
+	////创建一个模型矩阵
+	//mat4 model = mat4(1.0f);
+	//model = glm::rotate(model, glm::radians(50.0f)*time, vec3(0.5f, 1.0f, 0.0f));
+
+	float speed = cameraSpeed_ * c->delaTime_;
+
+	if (glfwGetKey(c->window_, GLFW_KEY_U) == GLFW_PRESS) {
+		visibilityValue_ += 0.1f;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_P) == GLFW_PRESS) {
+		visibilityValue_ -= 0.1f;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_W) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, c->delaTime_);
+		//cameraPos_ += speed * cameraFront_;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_S) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, c->delaTime_);
+		//cameraPos_ -= speed * cameraFront_;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_D) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, c->delaTime_);
+		//cameraPos_ += glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, c->delaTime_);
+		//cameraPos_ -= glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
+	}
+
+	mat4 view = mat4(1.0f);
+	//lookAt(eye,center,up)
+	//eye: 相机位置
+	//center:相机指向的目标位置
+	//up:世界坐标中的向上向量
+	//计算出来的矩阵就可以用来作为观察矩阵
+	view = glm::lookAt(cameraPos_, cameraPos_ + cameraFront_, cameraUp_);
+	mat4 v = camera_->GetViewMatrix();
+	//std::cout << "观察举证 view: \n{\n " << view[0][0] << "," << view[0][1] << "," << view[0][2] << "," << view[0][3] << ",\n"
+	//	<< view[1][0] << "," << view[1][1] << "," << view[1][2] << "," << view[1][3] << ",\n" << view[2][0] << "," << view[2][1] << "," << view[2][2] << "," << view[2][3]
+	//	<< "\n" << view[3][0] << "," << view[3][1] << "," << view[3][2] << "," << view[3][3] << "\n}";
+
+	mat4 projection = mat4(1.0f);
+	projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
+
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(v));
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+
+	//shader_->Set2f("towards", -1.0f, -1.0f);
+
+	shader_->SetFloat("visibility", Clamp01(visibilityValue_));
+
+	vao_->Bind();
+
+}
+
+void DrawSphere::MoveCamera(float xpos, float ypos, bool constrainPitch)
+{
+	if (firstMouse_)
+	{
+		lastX_ = xpos;
+		lastY_ = ypos;
+		firstMouse_ = false;
+	}
+
+	float xoffset = xpos - lastX_;
+	float yoffset = lastY_ - ypos;
+
+	lastX_ = xpos;
+	lastY_ = ypos;
+
+	camera_->ProcessMouseMovement(xoffset, yoffset, constrainPitch);
+
+}
+
+
 LightDraw::LightDraw(Shader* shader, Shader* lightShader,FPS_Camera* camera) :DrawBase(shader, camera)
 {
 	lightShader_ = lightShader;
@@ -1025,8 +1201,8 @@ void LightDraw::Init(const void* context)
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	//glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
+	//glEnableVertexAttribArray(2);
 
 	//更改绑定，绑定光照的VAO
 	lightVAO_->Bind();
@@ -1043,10 +1219,11 @@ void LightDraw::Draw(const void* context)
 	ProcessInput(c);
 
 	vec3 lightPos = vec3(1.2f, 1.0f, 2.0f);
-	vec3 lightColor = vec3(0.341f, 0.945f, 0.976f);
-	lightColor.x = Abs(cos(c->time_));
-	lightColor.y = Abs(sin(c->time_));
-	lightColor.z = Abs(sin(c->time_ + cos(c->time_)));
+	vec3 lightColor = vec3(1.0f,1.0f,1.0f);
+	//vec3 lightColor = vec3(0.341f, 0.945f, 0.976f);
+	lightColor.x = Abs(sin(c->time_) * 2.0f);
+	lightColor.y = Abs(sin(c->time_) * 0.7f);
+	lightColor.z = Abs(sin(c->time_ * 1.3f));
 	vec3 cubeColor = vec3(1.0f, 0.5f, 0.31f);
 	//vec3 cubeColor = vec3(1.0f, 1.0f, 1.0f);
 
@@ -1065,18 +1242,29 @@ void LightDraw::Draw(const void* context)
 	mat4 projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
 	mat4 view = camera_->GetViewMatrix();
 
+	vec3 diffuseColor = lightColor * vec3(0.5f);
+	vec3 ambientColor = diffuseColor * vec3(0.2f);
+
 	//第一个绘制第一个vao
 	shader_->Use();
+
+	shader_->Set3fv("light.position", &lightPos[0]);
+	shader_->Set3f("light.ambient", 0.2f, 0.2f, 1.0f);
+	shader_->Set3fv("light.diffuse", VALUE_PTR(diffuseColor));
+	shader_->Set3fv("light.specular", VALUE_PTR(ambientColor));
+
 	shader_->Set3fv("objectColor", VALUE_PTR(cubeColor));
-	shader_->Set3fv("lightColor",VALUE_PTR(lightColor));
-	shader_->Set3fv("lightPos", &lightPos[0]);
+
 	shader_->SetMatrix4fv("model", 1, GL_FALSE, &model[0][0]);
 	shader_->SetMatrix3fv("normalMatrix", 1, GL_FALSE, &normalMatrix[0][0]);
 	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
 	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
 	shader_->Set3fv("viewPos", &camera_->position[0]);
-	shader_->SetFloat("specularStrength", 0.5f);//设置镜面强度
-	shader_->SetInt("shininess", 256);//设置反射度
+
+	shader_->Set3f("material.specular", 0.5f,0.5f,0.5f);//设置镜面强度
+	shader_->Set3f("material.diffuse", 1.0f, 0.5f, 0.31f);
+	shader_->Set3f("material.ambient", 1.0f, 0.5f, 0.31f);
+	shader_->SetFloat("material.shininess", 32.0f);//设置反射度
 
 	vao_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -1095,7 +1283,6 @@ void LightDraw::Draw(const void* context)
 	lightVAO_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
-
 
 void LightDraw::MoveCamera(float xpos, float ypos, bool constrainPitch)
 {
@@ -1136,6 +1323,219 @@ void LightDraw::ProcessInput(DrawContext* c)
 	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
 		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, c->delaTime_);
 		//cameraPos_ -= glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
+	}
+
+}
+
+LightingMapsDraw::LightingMapsDraw(Shader* shader, Shader* lightShader, FPS_Camera* camera) :DrawBase(shader, camera)
+{
+	lightShader_ = lightShader;
+	vao_ = new VAOContext();
+	vbo_ = new VBOContext();
+	lightVAO_ = new VAOContext();
+
+	glGenTextures(1, &diffuseTex_);
+	glGenTextures(1, &specularTex_);
+	glGenTextures(1, &emissionTex_);
+}
+
+LightingMapsDraw::~LightingMapsDraw()
+{
+	glDeleteTextures(1, &diffuseTex_);
+	glDeleteTextures(1, &specularTex_);
+	glDeleteBuffers(1, &emissionTex_);
+
+	delete vao_;
+	delete vbo_;
+	delete lightVAO_;
+}
+
+void LightingMapsDraw::Init(const void* context)
+{
+	
+	float vertices[] = {
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+	};
+
+	vao_->Bind();
+	vbo_->Bind();
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	bool success = LoadImage2D(&diffuseTex_, "./assets/textures/container2.png", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	success = LoadImage2D(&specularTex_, "./assets/textures/container2_specular.png", GL_REPEAT, GL_NEAREST);
+	//练习3
+	//success = LoadImage2D(&specularTex_, "./assets/textures/lighting_maps_specular_color.png", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	success = LoadImage2D(&emissionTex_, "./assets/textures/matrix.jpg", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	lightVAO_->Bind();
+	vbo_->Bind();
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(0));
+	glEnableVertexAttribArray(0);
+
+	shader_->Use();
+	shader_->SetInt("material.diffuse", 0);
+	shader_->SetInt("material.specular", 1);
+	shader_->SetInt("material.emission", 2);
+}
+
+void LightingMapsDraw::Draw(const void* context)
+{
+
+	DrawContext* c = (DrawContext*)context;
+	ProcessInput(c);
+
+	vec3 lightPos = vec3(1.2f, 1.0f, 2.0f);
+	vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
+	//lightPos.x = 1.0f + sin(c->time_) * 2.0f;
+	//lightPos.y = sin(c->time_/2) * 1.0f;
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	mat4 model = mat4(1.0f);
+	mat3 normalMatrix = mat3(1.0);
+	normalMatrix = glm::transpose(glm::inverse(model));
+	model = glm::translate(model, glm::vec3(1.0f, 1.0f, 0.0f) * sin(c->time_ / 2) * 1.0f);
+	model = glm::rotate(model, glm::radians(c->time_ * 10.0f), vec3(0.0f, 1.0f, 0.0f));
+	//model = glm::scale(model, vec3(5.0f, 0.2f, 5.0f));
+	mat4 projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
+	mat4 view = camera_->GetViewMatrix();
+
+	vec3 diffuseColor = lightColor * vec3(0.5f);
+	vec3 ambientColor = lightColor * vec3(2.0f);
+	vec3 ambient = lightColor * vec3(0.5f);
+
+	//第一个绘制第一个vao
+	shader_->Use();
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, diffuseTex_);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, specularTex_);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, emissionTex_);
+
+	shader_->Set3fv("light.position", &lightPos[0]);
+	shader_->Set3fv("light.ambient", &ambient[0]);
+	shader_->Set3fv("light.diffuse", VALUE_PTR(diffuseColor));
+	shader_->Set3fv("light.specular", VALUE_PTR(ambientColor));
+
+	shader_->SetMatrix4fv("model", 1, GL_FALSE, &model[0][0]);
+	shader_->SetMatrix3fv("normalMatrix", 1, GL_FALSE, &normalMatrix[0][0]);
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+	shader_->Set3fv("viewPos", &camera_->position[0]);
+
+	shader_->SetFloat("material.shininess", 64.0f);
+	shader_->Set2f("emissionOffset", 0.0f, c->time_ *0.5f);
+
+	vao_->Bind();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	//绘制光源，用第二个vao
+	lightShader_->Use();
+
+	model = mat4(1.0f);
+	model = glm::translate(model, lightPos);
+	model = glm::scale(model, vec3(0.2f));
+
+	lightShader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(model));
+	lightShader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+	lightShader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+	lightShader_->Set3fv("lightColor", &lightColor[0]);
+	lightVAO_->Bind();
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void LightingMapsDraw::MoveCamera(float xpos, float ypos, bool constrainPitch)
+{
+	if (firstMouse_)
+	{
+		lastX_ = xpos;
+		lastY_ = ypos;
+		firstMouse_ = false;
+	}
+
+	float xoffset = xpos - lastX_;
+	float yoffset = lastY_ - ypos;
+
+	lastX_ = xpos;
+	lastY_ = ypos;
+
+	camera_->ProcessMouseMovement(xoffset, yoffset, constrainPitch);
+
+}
+
+void LightingMapsDraw::ProcessInput(DrawContext* c)
+{
+
+	float speed = cameraSpeed_ * c->delaTime_;
+
+	if (glfwGetKey(c->window_, GLFW_KEY_W) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, c->delaTime_);
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_S) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, c->delaTime_);
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_D) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, c->delaTime_);
+	}
+	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, c->delaTime_);
 	}
 
 }
