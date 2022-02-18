@@ -30,7 +30,7 @@ public:
 	virtual ~DrawBase() {}
 
 	virtual void Init(const void* context) = 0;
-	virtual void Draw(const void* context) = 0;
+	virtual void Update(const void* context) = 0;
 
 	virtual void MoveCamera(float xpos, float ypos, bool constrainPitch = true)
 	{
@@ -42,12 +42,24 @@ public:
 		camera_->ProcessMouseScroll(yoffset);
 	}
 
+	virtual void InputDrive(GLFWwindow* window, float time, float deltaTime) {}
+
 protected:
 
 	Shader* shader_;
 	FPS_Camera* camera_;
 
 };
+
+struct DrawContext
+{
+	int windowHeight_;
+	int windowWidth_;
+	float aspectRatio_;
+	float delaTime_;
+	float time_;
+};
+
 
 class Context
 {
@@ -61,7 +73,7 @@ public:
 
 	float visibilityValue_;
 
-	void InitDraws(int count) 
+	void InitDraws(int count)
 	{
 		draws_ = new DrawBase * [count];drawsCount_
 			= count;
@@ -72,7 +84,7 @@ public:
 		if (draws_ == NULL) return;
 		for (int i = 0; i < drawsCount_; i++)
 		{
-			if(draws_[i] != NULL)
+			if (draws_[i] != NULL)
 				delete draws_[i];
 		}
 		delete draws_;
@@ -85,13 +97,38 @@ private:
 	int drawsCount_;
 };
 
-struct DrawContext 
+class LightDrawBase :public DrawBase
 {
-	GLFWwindow* window_;
-	float windowHeight_;
-	float windowWidth_;
-	float delaTime_;
-	float time_;
+public:
+	LightDrawBase(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera);
+	~LightDrawBase();
+
+	virtual void Init(const void* context) = 0;
+	virtual void Update(const void* context) = 0;
+	virtual void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
+	virtual void InputDrive(GLFWwindow* window, float time, float deltaTime);
+
+
+protected:
+
+	const vec3 normalVec3 = vec3(1.0f, 1.0f, 1.0f);
+
+	Shader* lightShader_;
+	VAOContext* vao_;
+	VAOContext* lightVAO_;
+	VBOContext* vbo_;
+
+	bool firstMouse_;
+	float lastX_;
+	float lastY_;
+	float yaw_;
+	float pitch_;
+
+	glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
+	float cameraSpeed_ = 2.5f;
+
 };
 
 class DrawTriangle:public DrawBase
@@ -102,7 +139,7 @@ public :
 	DrawTriangle(Shader* shader);
 	~DrawTriangle();
 
-	void Draw(const void* context);
+	void Update(const void* context);
 	void Init(const void* context);
 
 private:
@@ -119,8 +156,9 @@ public:
 	DrawRectangle(Shader* shader);
 	~DrawRectangle();
 
-	void Draw(const void* context);
+	void Update(const void* context);
 	void Init(const void* context);
+	void InputDrive(GLFWwindow* window, float time, float deltaTime);
 
 private:
 
@@ -140,8 +178,9 @@ public :
 	Draw3D(Shader* shader);
 	~Draw3D();
 
-	void Draw(const void* context);
+	void Update(const void* context);
 	void Init(const void* context);
+	void InputDrive(GLFWwindow* window,float time, float deltaTime);
 
 private:
 
@@ -176,7 +215,7 @@ public:
 	DrawTwoConnectTriangle(Shader* shader);
 	~DrawTwoConnectTriangle();
 	
-	void Draw(const void* context);
+	void Update(const void* context);
 	void Init(const void* context);
 
 private:
@@ -193,7 +232,7 @@ public:
 	DrawTwoTriangleUseDiffVAOandVBO(Shader* shader);
 	~DrawTwoTriangleUseDiffVAOandVBO();
 
-	void Draw(const void* context);
+	void Update(const void* context);
 	void Init(const void* context);
 
 private:
@@ -209,7 +248,7 @@ public:
 	DrawDynamicTriangle(Shader* shader);
 	~DrawDynamicTriangle();
 
-	void Draw(const void* context);
+	void Update(const void* context);
 	void Init(const void* context);
 
 private:
@@ -226,9 +265,10 @@ public:
 	DrawCamera(Shader* shader,FPS_Camera* camera);
 	~DrawCamera();
 
-	void Draw(const void* context);
+	void Update(const void* context);
 	void Init(const void* context);
 	void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
+	void InputDrive(GLFWwindow* window, float time, float deltaTime);
 
 private:
 
@@ -275,9 +315,10 @@ public:
 	DrawSphere(Shader* shader, FPS_Camera* camera);
 	~DrawSphere();
 
-	void Draw(const void* context);
+	void Update(const void* context);
 	void Init(const void* context);
 	void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
+	void InputDrive(GLFWwindow* window, float time, float deltaTime);
 
 private:
 
@@ -300,70 +341,167 @@ private:
 };
 
 
-class LightDraw :public DrawBase
+class LightDraw :public LightDrawBase
 {
 public:
 
 	LightDraw(Shader* shader, Shader* lightShader,FPS_Camera* camera);
 	~LightDraw();
 
-	void Draw(const void* context);
+	void Update(const void* context);
 	void Init(const void* context);
-	void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
-
-private:
-
-	Shader* lightShader_;
-	VAOContext* vao_;
-	VAOContext* lightVAO_;
-	VBOContext* vbo_;
-
-	bool firstMouse_;
-	float lastX_;
-	float lastY_;
-	float yaw_;
-	float pitch_;
-
-	glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
-	glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
-	glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
-	float cameraSpeed_ = 2.5f;
-
-	void ProcessInput(DrawContext* c);
 };
 
-class LightingMapsDraw :public DrawBase 
+class LightingMapsDraw :public LightDrawBase 
 {
 
 public:
 	LightingMapsDraw(Shader* shader, Shader* lightShader, FPS_Camera* camera);
 	~LightingMapsDraw();
 
-	void Draw(const void* context);
+	void Update(const void* context);
 	void Init(const void* context);
-	void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
 
-private:
+protected:
 
-	Shader* lightShader_;
-	VAOContext* vao_;
-	VAOContext* lightVAO_;
-	VBOContext* vbo_;
+	float vertices_[36 * 8] = {
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+	};
 
 	uint diffuseTex_;
 	uint specularTex_;
 	uint emissionTex_;
+};
 
-	bool firstMouse_;
-	float lastX_;
-	float lastY_;
-	float yaw_;
-	float pitch_;
+class Lightcasters_DirectionalLight_Draw :public LightingMapsDraw
+{
+public:
 
-	glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
-	glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
-	glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
-	float cameraSpeed_ = 2.5f;
+	Lightcasters_DirectionalLight_Draw(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera);
+	~Lightcasters_DirectionalLight_Draw();
 
-	void ProcessInput(DrawContext* c);
+	void Update(const void* context);
+	void Init(const void* context);
+	
+
+protected:
+
+	vec3 cubePositions_[10] =
+	{
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),
+		glm::vec3(1.5f,  2.0f, -2.5f),
+		glm::vec3(1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
+
+private :
+
+	struct Light
+	{
+		vec3 color;
+		vec3 direction;
+		vec3 ambient;
+		vec3 diffuse;
+		vec3 specular;
+	};
+};
+
+class Lightcasters_PointLight_Draw :public Lightcasters_DirectionalLight_Draw 
+{
+public:
+
+	Lightcasters_PointLight_Draw(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera);
+	~Lightcasters_PointLight_Draw();
+
+	void Update(const void* context);
+
+private:
+
+	struct Light
+	{
+		vec3 color;
+		vec3 position;
+		vec3 ambient;
+		vec3 diffuse;
+		vec3 specular;
+
+		float k_constant;
+		float k_linear;
+		float k_quadratic;
+	};
+
+	void SetLightShaderValue(Light light);
+};
+
+class Lightcasters_Spotlight_Draw :public Lightcasters_DirectionalLight_Draw 
+{
+public:
+	Lightcasters_Spotlight_Draw(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera);
+	~Lightcasters_Spotlight_Draw();
+
+	void Update(const void* context);
+
+private:
+	struct Light
+	{
+		vec3 color;
+		vec3 position;
+		vec3 direction;
+		vec3 ambient;
+		vec3 diffuse;
+		vec3 specular;
+
+		float cutOff;
+
+		float k_constant;
+		float k_linear;
+		float k_quadratic;
+	};
 };

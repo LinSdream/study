@@ -1,10 +1,8 @@
 #include<windows/window.h>
 
-Window::Window(int wight, int height, char* title, FramebuffSizeCallback callback)
+Window::Window(int width, int height, char* title, FramebuffSizeCallback callback)
 {
 	init_code_ = (int)WINDOWSTATUS_NO_INIT;
-	height_ = 0;
-	weight_ = 0;
 	context_ = NULL;
 
 	glfwInit();
@@ -16,7 +14,7 @@ Window::Window(int wight, int height, char* title, FramebuffSizeCallback callbac
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif // __APPLE__
 
-	window_ = glfwCreateWindow(wight, height, title, NULL, NULL);
+	window_ = glfwCreateWindow(width, height, title, NULL, NULL);
 	if (window_ == NULL) 
 	{
 		init_code_ = (int)WINDOWSTATUS_CREATRE_WINDOW;
@@ -35,17 +33,12 @@ Window::Window(int wight, int height, char* title, FramebuffSizeCallback callbac
 		return;
 	}
 
-	height_ = height;
-	weight_ = wight;
-
 	init_code_ = (int)WINDOWSTATUS_SUCCESS;
 }
 
 Window::Window() 
 {
 	init_code_ = (int)WINDOWSTATUS_NO_INIT;
-	height_ = 0;
-	weight_ = 0;
 	context_ = NULL;
 
 	glfwInit();
@@ -72,10 +65,7 @@ Window::Window()
 		return;
 	}
 
-	height_ = 600;
-	weight_ = 800;
-
-	glViewport(0, 0, weight_, height_);
+	glViewport(0, 0, 800,600);
 
 	init_code_ = (int)WINDOWSTATUS_SUCCESS;
 }
@@ -90,14 +80,9 @@ int Window::GetInitializeStatus() const
 	return init_code_;
 }
 
-int Window::GetHeight() const
+void Window::GetSize(int* width, int* height)
 {
-	return height_;
-}
-
-int Window::GetWeight() const
-{
-	return weight_;
+	glfwGetWindowSize(window_, width, height);
 }
 
 void Window::Bind(void* context)

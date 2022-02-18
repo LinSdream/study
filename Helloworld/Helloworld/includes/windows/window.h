@@ -22,18 +22,17 @@ public:
 
 	void Update(RelRenderFun render_fun);
 	int GetInitializeStatus() const;
-	int GetHeight() const;
-	int GetWeight() const;
+	void GetSize(int* width,int* height);
 
 	void Bind(void* context);
 	void UnBind();
+
+	GLFWwindow* GetWindow() const { return window_; }
 
 private:
 
 	GLFWwindow* window_;
 	int init_code_;
-	int height_;
-	int weight_;
 	void* context_;
 
 };

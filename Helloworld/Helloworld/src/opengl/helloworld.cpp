@@ -92,7 +92,7 @@ void DrawTriangle::Init(const void* context)
 	glBindVertexArray(0);
 }
 
-void DrawTriangle::Draw(const void* context)
+void DrawTriangle::Update(const void* context)
 {
 	shader_->Use();
 	vao_->Bind();
@@ -236,7 +236,7 @@ void DrawRectangle::Init(const void* context)
 	shader_->SetInt("ourTexture2", 1);
 }
 
-void DrawRectangle::Draw(const void* context)
+void DrawRectangle::Update(const void* context)
 {
 
 	//如果有多个纹理，需要对openGL进行定义，告诉是哪个的纹理单元。如果就一个纹理则不需要。openGL可以声明16个,0-15
@@ -251,13 +251,7 @@ void DrawRectangle::Draw(const void* context)
 
 	shader_->Set2f("towards", -1.0f, -1.0f);
 	DrawContext* c= (DrawContext*)context;
-	if (glfwGetKey(c->window_, GLFW_KEY_UP) == GLFW_PRESS) {
-		visibilityValue_ += 0.1f;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		visibilityValue_ -= 0.1f;
-	}
-
+	
 	shader_->SetFloat("visibility", Clamp01(visibilityValue_));
 	mat4 trans = mat4(1.0f);
 
@@ -279,6 +273,16 @@ void DrawRectangle::Draw(const void* context)
 	vao_->Bind();
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+}
+
+void DrawRectangle::InputDrive(GLFWwindow* window, float time, float deltaTime) 
+{
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		visibilityValue_ += 0.1f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		visibilityValue_ -= 0.1f;
+	}
 }
 
 DrawTwoConnectTriangle::DrawTwoConnectTriangle(Shader* shader):DrawBase(shader)
@@ -330,7 +334,7 @@ void DrawTwoConnectTriangle::Init(const void* context)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-void DrawTwoConnectTriangle::Draw(const void* context)
+void DrawTwoConnectTriangle::Update(const void* context)
 {
 	shader_->Use();
 	vao_->Bind();
@@ -386,7 +390,7 @@ void DrawTwoTriangleUseDiffVAOandVBO::Init(const void* context)
 
 }
 
-void DrawTwoTriangleUseDiffVAOandVBO::Draw(const void* context)
+void DrawTwoTriangleUseDiffVAOandVBO::Update(const void* context)
 {
 	shader_->Use();
 	glBindVertexArray(vaos_[0]);
@@ -423,7 +427,7 @@ void DrawDynamicTriangle::Init(const void* context)
 
 }
 
-void DrawDynamicTriangle::Draw(const void* context)
+void DrawDynamicTriangle::Update(const void* context)
 {
 	vao_->Bind();
 	vbo_->Bind();
@@ -658,7 +662,7 @@ void Draw3D::Init(const void* context)
 	shader_->SetInt("ourTexture2", 1);
 }
 
-void Draw3D::Draw(const void* context)
+void Draw3D::Update(const void* context)
 {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -684,7 +688,7 @@ void Draw3D::Draw(const void* context)
 
 	//定义一个透视举证，使用透视投影
 	mat4 projection;
-	projection = glm::perspective(glm::radians(45.0f), c->windowWidth_ / c->windowHeight_, 0.01f, 100.0f);
+	projection = glm::perspective(glm::radians(45.0f),((float)c->windowWidth_ / (float)c->windowHeight_), 0.01f, 100.0f);
 
 	//shader_->SetMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
 	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
@@ -692,12 +696,6 @@ void Draw3D::Draw(const void* context)
 
 	//shader_->Set2f("towards", -1.0f, -1.0f);
 
-	if (glfwGetKey(c->window_, GLFW_KEY_UP) == GLFW_PRESS) {
-		visibilityValue_ += 0.1f;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		visibilityValue_ -= 0.1f;
-	}
 
 	shader_->SetFloat("visibility", Clamp01(visibilityValue_));
 
@@ -717,6 +715,17 @@ void Draw3D::Draw(const void* context)
 		//在OpenGL中，我们提供的坐标矩阵可到裁剪坐标即可，OpenGL会帮助我们通过使用glViewPort来标准化设备坐标到屏幕坐标
 		//裁剪坐标即：透视矩阵(裁剪空间) * 观察矩阵(观察空间) * 世界矩阵(世界空间) * 局部坐标(局部空间)  V clip = M projection * M view * M model * M local (一定要从右往左) 矩阵不符合交换律
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+}
+
+void Draw3D::InputDrive(GLFWwindow* window, float time, float deltaTime)
+{
+
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		visibilityValue_ += 0.1f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		visibilityValue_ -= 0.1f;
 	}
 }
 
@@ -888,7 +897,7 @@ void DrawCamera::Init(const void* context)
 	shader_->SetInt("ourTexture2", 1);
 }
 
-void DrawCamera::Draw(const void* context)
+void DrawCamera::Update(const void* context)
 {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -909,29 +918,6 @@ void DrawCamera::Draw(const void* context)
 	
 	float speed = cameraSpeed_  * c->delaTime_;
 
-	if (glfwGetKey(c->window_, GLFW_KEY_U) == GLFW_PRESS) {
-		visibilityValue_ += 0.1f;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_P) == GLFW_PRESS) {
-		visibilityValue_ -= 0.1f;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_W) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, c->delaTime_);
-		//cameraPos_ += speed * cameraFront_;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_S) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, c->delaTime_);
-		//cameraPos_ -= speed * cameraFront_;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_D) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, c->delaTime_);
-		//cameraPos_ += glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, c->delaTime_);
-		//cameraPos_ -= glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
-	}
-
 	mat4 view = mat4(1.0f);
 	//lookAt(eye,center,up)
 	//eye: 相机位置
@@ -945,7 +931,7 @@ void DrawCamera::Draw(const void* context)
 	//	<< "\n" << view[3][0] << "," << view[3][1] << "," << view[3][2] << "," << view[3][3] << "\n}";
 
 	mat4 projection = mat4(1.0f);
-	projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
+	projection = camera_->GetProjectionMatrix(c->aspectRatio_);
 
 	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(v));
 	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
@@ -965,6 +951,29 @@ void DrawCamera::Draw(const void* context)
 		model = glm::rotate(model, glm::radians(angle) * c->time_, vec3(1.0f, 0.3f, 0.5f));
 		shader_->SetMatrix4fv("model", 1, GL_FALSE, &model[0][0]);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+}
+
+void DrawCamera::InputDrive(GLFWwindow* window, float time, float deltaTime) 
+{
+
+	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
+		visibilityValue_ += 0.1f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+		visibilityValue_ -= 0.1f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, deltaTime);
 	}
 }
 
@@ -1046,7 +1055,7 @@ void DrawSphere::Init(const void* context)
 
 }
 
-void DrawSphere::Draw(const void* context)
+void DrawSphere::Update(const void* context)
 {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1059,31 +1068,6 @@ void DrawSphere::Draw(const void* context)
 	////创建一个模型矩阵
 	//mat4 model = mat4(1.0f);
 	//model = glm::rotate(model, glm::radians(50.0f)*time, vec3(0.5f, 1.0f, 0.0f));
-
-	float speed = cameraSpeed_ * c->delaTime_;
-
-	if (glfwGetKey(c->window_, GLFW_KEY_U) == GLFW_PRESS) {
-		visibilityValue_ += 0.1f;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_P) == GLFW_PRESS) {
-		visibilityValue_ -= 0.1f;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_W) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, c->delaTime_);
-		//cameraPos_ += speed * cameraFront_;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_S) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, c->delaTime_);
-		//cameraPos_ -= speed * cameraFront_;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_D) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, c->delaTime_);
-		//cameraPos_ += glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, c->delaTime_);
-		//cameraPos_ -= glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
-	}
 
 	mat4 view = mat4(1.0f);
 	//lookAt(eye,center,up)
@@ -1098,7 +1082,7 @@ void DrawSphere::Draw(const void* context)
 	//	<< "\n" << view[3][0] << "," << view[3][1] << "," << view[3][2] << "," << view[3][3] << "\n}";
 
 	mat4 projection = mat4(1.0f);
-	projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
+	projection = camera_->GetProjectionMatrix(c->aspectRatio_);
 
 	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(v));
 	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
@@ -1109,6 +1093,30 @@ void DrawSphere::Draw(const void* context)
 
 	vao_->Bind();
 
+}
+
+void DrawSphere::InputDrive(GLFWwindow* window, float time, float deltaTime) 
+{
+	float speed = cameraSpeed_ * deltaTime;
+
+	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
+		visibilityValue_ += 0.1f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+		visibilityValue_ -= 0.1f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, deltaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, deltaTime);
+	}
 }
 
 void DrawSphere::MoveCamera(float xpos, float ypos, bool constrainPitch)
@@ -1130,21 +1138,59 @@ void DrawSphere::MoveCamera(float xpos, float ypos, bool constrainPitch)
 
 }
 
-
-LightDraw::LightDraw(Shader* shader, Shader* lightShader,FPS_Camera* camera) :DrawBase(shader, camera)
+LightDrawBase::LightDrawBase(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera) :DrawBase(cubeShader, camera),lightShader_(lightShader)
 {
-	lightShader_ = lightShader;
 	vao_ = new VAOContext();
-	vbo_ = new VBOContext();
 	lightVAO_ = new VAOContext();
+	vbo_ = new VBOContext();
 }
 
-LightDraw::~LightDraw() 
+LightDrawBase::~LightDrawBase()
 {
 	delete vao_;
-	delete vbo_;
 	delete lightVAO_;
+	delete vbo_;
 }
+
+void LightDrawBase::MoveCamera(float xpos, float ypos, bool constrainPitch) 
+{
+	if (firstMouse_)
+	{
+		lastX_ = xpos;
+		lastY_ = ypos;
+		firstMouse_ = false;
+	}
+
+	float xoffset = xpos - lastX_;
+	float yoffset = lastY_ - ypos;
+
+	lastX_ = xpos;
+	lastY_ = ypos;
+
+	camera_->ProcessMouseMovement(xoffset, yoffset, constrainPitch);
+}
+
+void LightDrawBase::InputDrive(GLFWwindow* window,float time,float delaTime)
+{
+	float speed = cameraSpeed_ * delaTime;
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, delaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, delaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, delaTime);
+	}
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, delaTime);
+	}
+}
+
+LightDraw::LightDraw(Shader* shader, Shader* lightShader, FPS_Camera* camera) :LightDrawBase(shader, lightShader, camera) {}
+
+LightDraw::~LightDraw() {}
 
 void LightDraw::Init(const void* context) 
 {
@@ -1212,12 +1258,10 @@ void LightDraw::Init(const void* context)
 	glEnableVertexAttribArray(0);
 }
 
-void LightDraw::Draw(const void* context) 
+void LightDraw::Update(const void* context) 
 {
-
 	DrawContext* c = (DrawContext*)context;
-	ProcessInput(c);
-
+	
 	vec3 lightPos = vec3(1.2f, 1.0f, 2.0f);
 	vec3 lightColor = vec3(1.0f,1.0f,1.0f);
 	//vec3 lightColor = vec3(0.341f, 0.945f, 0.976f);
@@ -1239,7 +1283,7 @@ void LightDraw::Draw(const void* context)
 	//法线矩阵在CPU这里进行计算 G = (M^-1)^T
 	normalMatrix = glm::transpose(glm::inverse(model));
 	model = glm::scale(model, vec3(5.0f, 0.2f, 5.0f));
-	mat4 projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
+	mat4 projection = camera_->GetProjectionMatrix(c->aspectRatio_);
 	mat4 view = camera_->GetViewMatrix();
 
 	vec3 diffuseColor = lightColor * vec3(0.5f);
@@ -1284,56 +1328,8 @@ void LightDraw::Draw(const void* context)
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void LightDraw::MoveCamera(float xpos, float ypos, bool constrainPitch)
+LightingMapsDraw::LightingMapsDraw(Shader* shader, Shader* lightShader, FPS_Camera* camera) :LightDrawBase(shader, lightShader, camera)
 {
-	if (firstMouse_)
-	{
-		lastX_ = xpos;
-		lastY_ = ypos;
-		firstMouse_ = false;
-	}
-
-	float xoffset = xpos - lastX_;
-	float yoffset = lastY_ - ypos;
-
-	lastX_ = xpos;
-	lastY_ = ypos;
-
-	camera_->ProcessMouseMovement(xoffset, yoffset, constrainPitch);
-
-}
-
-void LightDraw::ProcessInput(DrawContext* c) 
-{
-
-	float speed = cameraSpeed_ * c->delaTime_;
-
-	if (glfwGetKey(c->window_, GLFW_KEY_W) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, c->delaTime_);
-		//cameraPos_ += speed * cameraFront_;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_S) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, c->delaTime_);
-		//cameraPos_ -= speed * cameraFront_;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_D) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, c->delaTime_);
-		//cameraPos_ += glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, c->delaTime_);
-		//cameraPos_ -= glm::normalize(glm::cross(cameraFront_, cameraUp_)) * speed;
-	}
-
-}
-
-LightingMapsDraw::LightingMapsDraw(Shader* shader, Shader* lightShader, FPS_Camera* camera) :DrawBase(shader, camera)
-{
-	lightShader_ = lightShader;
-	vao_ = new VAOContext();
-	vbo_ = new VBOContext();
-	lightVAO_ = new VAOContext();
-
 	glGenTextures(1, &diffuseTex_);
 	glGenTextures(1, &specularTex_);
 	glGenTextures(1, &emissionTex_);
@@ -1344,16 +1340,11 @@ LightingMapsDraw::~LightingMapsDraw()
 	glDeleteTextures(1, &diffuseTex_);
 	glDeleteTextures(1, &specularTex_);
 	glDeleteBuffers(1, &emissionTex_);
-
-	delete vao_;
-	delete vbo_;
-	delete lightVAO_;
 }
 
 void LightingMapsDraw::Init(const void* context)
 {
-	
-	float vertices[] = {
+	float vertices_[36 * 8] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
@@ -1401,7 +1392,7 @@ void LightingMapsDraw::Init(const void* context)
 	vao_->Bind();
 	vbo_->Bind();
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -1433,11 +1424,10 @@ void LightingMapsDraw::Init(const void* context)
 	shader_->SetInt("material.emission", 2);
 }
 
-void LightingMapsDraw::Draw(const void* context)
+void LightingMapsDraw::Update(const void* context)
 {
 
 	DrawContext* c = (DrawContext*)context;
-	ProcessInput(c);
 
 	vec3 lightPos = vec3(1.2f, 1.0f, 2.0f);
 	vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
@@ -1447,12 +1437,13 @@ void LightingMapsDraw::Draw(const void* context)
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	mat4 model = mat4(1.0f);
-	mat3 normalMatrix = mat3(1.0);
-	normalMatrix = glm::transpose(glm::inverse(model));
 	model = glm::translate(model, glm::vec3(1.0f, 1.0f, 0.0f) * sin(c->time_ / 2) * 1.0f);
 	model = glm::rotate(model, glm::radians(c->time_ * 10.0f), vec3(0.0f, 1.0f, 0.0f));
+
+	mat3 normalMatrix = mat3(1.0);
+	normalMatrix = glm::transpose(glm::inverse(model));
 	//model = glm::scale(model, vec3(5.0f, 0.2f, 5.0f));
-	mat4 projection = camera_->GetProjectionMatrix(c->windowWidth_ / c->windowHeight_);
+	mat4 projection = camera_->GetProjectionMatrix(c->aspectRatio_);
 	mat4 view = camera_->GetViewMatrix();
 
 	vec3 diffuseColor = lightColor * vec3(0.5f);
@@ -1497,45 +1488,281 @@ void LightingMapsDraw::Draw(const void* context)
 	lightShader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
 	lightShader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
 	lightShader_->Set3fv("lightColor", &lightColor[0]);
+
 	lightVAO_->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void LightingMapsDraw::MoveCamera(float xpos, float ypos, bool constrainPitch)
+Lightcasters_DirectionalLight_Draw::Lightcasters_DirectionalLight_Draw(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera) :LightingMapsDraw(cubeShader, lightShader, camera) {}
+Lightcasters_DirectionalLight_Draw::~Lightcasters_DirectionalLight_Draw() {}
+
+void Lightcasters_DirectionalLight_Draw::Init(const void* context) 
 {
-	if (firstMouse_)
-	{
-		lastX_ = xpos;
-		lastY_ = ypos;
-		firstMouse_ = false;
-	}
+	
+	vao_->Bind();
+	vbo_->Bind();
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_, GL_STATIC_DRAW);
 
-	float xoffset = xpos - lastX_;
-	float yoffset = lastY_ - ypos;
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
-	lastX_ = xpos;
-	lastY_ = ypos;
+	bool success = LoadImage2D(&diffuseTex_, "./assets/textures/container2.png", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
 
-	camera_->ProcessMouseMovement(xoffset, yoffset, constrainPitch);
+	success = LoadImage2D(&specularTex_, "./assets/textures/container2_specular.png", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
 
+	success = LoadImage2D(&emissionTex_, "./assets/textures/matrix.jpg", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	lightVAO_->Bind();
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	shader_->Use();
+	shader_->SetInt("material.diffuse", 0);
+	shader_->SetInt("material.specular", 1);
+	shader_->SetInt("material.emission", 2);
 }
 
-void LightingMapsDraw::ProcessInput(DrawContext* c)
+void Lightcasters_DirectionalLight_Draw::Update(const void* context)
 {
 
-	float speed = cameraSpeed_ * c->delaTime_;
+	DrawContext* c = (DrawContext*)context;
+	glClear(GL_DEPTH_BUFFER_BIT);
 
-	if (glfwGetKey(c->window_, GLFW_KEY_W) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, c->delaTime_);
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_S) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, c->delaTime_);
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_D) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, c->delaTime_);
-	}
-	if (glfwGetKey(c->window_, GLFW_KEY_A) == GLFW_PRESS) {
-		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, c->delaTime_);
+	Light light;
+	light.color = vec3(1.0f, 1.0f, 1.0f);
+	vec3 normalVec3 = vec3(1.0f, 1.0f, 1.0f);
+	light.direction = vec3(-0.2f, -1.0f, -0.3f);
+	light.ambient = normalVec3 * vec3(0.2f);
+	light.diffuse = normalVec3 * vec3(0.5f);
+	light.specular = normalVec3 * vec3(2.0f);
+	
+	shader_->Use();
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, diffuseTex_);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, specularTex_);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, emissionTex_);
+
+
+	shader_->Set3fv("light.direction", VALUE_PTR(light.direction));
+	shader_->Set3fv("light.ambient", &light.ambient[0]);
+	shader_->Set3fv("light.diffuse", &light.diffuse[0]);
+	shader_->Set3fv("light.specular", &light.specular[0]);
+
+	mat4 projection = camera_->GetProjectionMatrix(c->aspectRatio_);
+	mat4 view = camera_->GetViewMatrix();
+
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+
+	shader_->Set3fv("viewPos", &camera_->position[0]);
+
+	shader_->SetFloat("material.shininess", 32.0f);
+	shader_->Set2f("emissionOffset", 0.0f, sin(c->time_ / 2));
+
+	vao_->Bind();
+
+	for (int i = 0;i < 10;i++) 
+	{
+		mat4 model = mat4(1.0f);
+		model = glm::translate(model, cubePositions_[i]);
+		float angle = 0.0f;
+		angle = 20.0f * (i + 1);
+		model = glm::rotate(model, glm::radians(angle) * c->time_, vec3(1.0f, 0.3f, 0.5f));
+
+		mat3 normalMat = mat3(1.0f);
+		normalMat = glm::transpose(glm::inverse(model));
+
+		shader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(model));
+		shader_->SetMatrix3fv("normalMatrix", 1, GL_FALSE, VALUE_PTR(normalMat));
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 
+	lightVAO_->Bind();
+	mat4 model = mat4(1.0f);
+	model = glm::translate(model, vec3(1.2f, 1.0f, 2.0f));
+	model = glm::scale(model, vec3(0.2f));
+
+	vec3 lightDir = vec3(0.0f) - light.direction;
+	mat4 lightPos = glm::translate(model, lightDir);
+
+	lightShader_->Use();
+	lightShader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(model));
+	lightShader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+	lightShader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+	lightShader_->Set3fv("lightColor", &light.color[0]);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+Lightcasters_PointLight_Draw::Lightcasters_PointLight_Draw(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera) :Lightcasters_DirectionalLight_Draw(cubeShader, lightShader, camera) {}
+Lightcasters_PointLight_Draw::~Lightcasters_PointLight_Draw() {}
+
+void Lightcasters_PointLight_Draw::SetLightShaderValue(Light light)
+{
+	shader_->Set3fv("light.position", VALUE_PTR(light.position));
+	shader_->Set3fv("light.ambient", VALUE_PTR(light.ambient));
+	shader_->Set3fv("light.diffuse", VALUE_PTR(light.diffuse));
+	shader_->Set3fv("light.specular", VALUE_PTR(light.specular));
+
+	shader_->SetFloat("light.k_constant", light.k_constant);
+	shader_->SetFloat("light.k_linear", light.k_linear);
+	shader_->SetFloat("light.k_quadratic", light.k_quadratic);
+}
+
+void Lightcasters_PointLight_Draw::Update(const void* context) 
+{
+	DrawContext* c = (DrawContext*)context;
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, diffuseTex_);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, specularTex_);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, emissionTex_);
+
+	Light light;
+	light.position = vec3(1.2f, 1.0f, 2.0f);
+	light.ambient = normalVec3 * vec3(0.2f);
+	light.color = normalVec3;
+	light.diffuse = normalVec3 * vec3(0.5f);
+	light.specular = normalVec3 * vec3(1.0f);
+	light.k_constant = 1.0f;
+	light.k_linear = 0.09f;
+	light.k_quadratic = 0.032f;
+
+	shader_->Use();
+	SetLightShaderValue(light);
+	shader_->SetFloat("material.shininess", 32.0f);
+
+
+	mat4 view = camera_->GetViewMatrix();
+	mat4 projection = camera_->GetProjectionMatrix(c->aspectRatio_);
+
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+	shader_->Set3fv("viewPos", &camera_->position[0]);
+	shader_->Set2f("emissionOffset", 0.0f, (c->time_ / 2));
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+
+	vao_->Bind();
+	for (int i = 0;i < 10;i++) 
+	{
+		mat4 model = mat4(1.0f);
+		mat3 normalMat = mat3(1.0f);
+
+		float angle = 20.0f * i;
+		model = glm::translate(model, cubePositions_[i]);
+		model = glm::rotate(model, glm::radians(angle) * c->time_ / (i + 1), vec3(1.0f, 0.3f, 0.5f));
+
+		normalMat = glm::transpose(glm::inverse(model));
+		shader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(model));
+		shader_->SetMatrix3fv("normalMatrix", 1, GL_FALSE, VALUE_PTR(normalMat));
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+
+	lightVAO_->Bind();
+	mat4 model = mat4(1.0f);
+	model = glm::translate(model, light.position);
+	model = glm::scale(model, vec3(0.2f));
+
+	lightShader_->Use();
+	lightShader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(model));
+	lightShader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+	lightShader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+	lightShader_->Set3fv("lightColor", &light.color[0]);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+Lightcasters_Spotlight_Draw::Lightcasters_Spotlight_Draw(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera) :Lightcasters_DirectionalLight_Draw(cubeShader, lightShader, camera) {}
+Lightcasters_Spotlight_Draw::~Lightcasters_Spotlight_Draw() {}
+
+void Lightcasters_Spotlight_Draw::Update(const void* context) 
+{
+	DrawContext* c = (DrawContext*)context;
+
+	glEnable(GL_DEPTH_TEST);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, diffuseTex_);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, specularTex_);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, emissionTex_);
+
+	Light light;
+	light.position = vec3(1.2f, 1.0f, 2.0f);
+	vec3 lightDir = cubePositions_[0] - light.position;
+	light.direction = glm::normalize(lightDir);
+	light.ambient = normalVec3 * vec3(0.2f);
+	light.color = normalVec3;
+	light.diffuse = normalVec3 * vec3(0.5f);
+	light.specular = normalVec3 * vec3(1.0f);
+	light.k_constant = 1.0f;
+	light.k_linear = 0.09f;
+	light.k_quadratic = 0.032f;
+	//本质上是比较角度的大小，通过计算lightDir与SpotDir的向量内积，返回的是一个cos值，在gpu中计算反余弦是很不明智的，因此，在CPU这里进行计算余弦值然后比较余弦值即可、
+	light.cutOff = glm::cos(glm::radians(12.5f));
+
+	shader_->Use();
+	shader_->SetFloat("material.shininess", 32.0f);
+
+	shader_->Set3fv("light.position", VALUE_PTR(camera_->position));
+	shader_->Set3fv("light.direction", VALUE_PTR(camera_->front));
+	shader_->Set3fv("light.ambient", VALUE_PTR(light.ambient));
+	shader_->Set3fv("light.diffuse", VALUE_PTR(light.diffuse));
+	shader_->Set3fv("light.specular", VALUE_PTR(light.specular));
+
+	shader_->SetFloat("light.k_constant", light.k_constant);
+	shader_->SetFloat("light.k_linear", light.k_linear);
+	shader_->SetFloat("light.k_quadratic", light.k_quadratic);
+
+	shader_->SetFloat("light.cutoff", light.cutOff);
+
+	mat4 view = camera_->GetViewMatrix();
+	mat4 projection = camera_->GetProjectionMatrix(c->aspectRatio_);
+
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+	shader_->Set3fv("viewPos", VALUE_PTR(camera_->position));
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+	shader_->Set2f("emissionOffset", 0.0f, sin(c->time_ / 2));
+
+	vao_->Bind();
+	for (int i = 0;i < 10;i++)
+	{
+		mat4 model = mat4(1.0f);
+		mat3 normalMat = mat3(1.0f);
+
+		float angle = 20.0f * i;
+		model = glm::translate(model, cubePositions_[i]);
+		model = glm::rotate(model, glm::radians(angle) * c->time_, vec3(1.0f, 0.3f, 0.5f));
+
+		normalMat = glm::transpose(glm::inverse(model));
+		shader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(model));
+		shader_->SetMatrix3fv("normalMatrix", 1, GL_FALSE, VALUE_PTR(normalMat));
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+
+	lightVAO_->Bind();
+	lightShader_->Use();
+	mat4 lightMat = mat4(1.0f);
+	lightMat = glm::translate(lightMat, light.position);
+	lightMat = glm::scale(lightMat, vec3(0.2f));
+
+	lightShader_->Use();
+	lightShader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(lightMat));
+	lightShader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+	lightShader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+	lightShader_->Set3fv("lightColor", &light.color[0]);
 }

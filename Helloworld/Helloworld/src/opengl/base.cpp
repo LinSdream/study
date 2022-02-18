@@ -92,7 +92,7 @@ Shader::Shader(char* vertex, char* fragment)
 	{
 		char log[512];
 		glGetShaderInfoLog(fragmentShader_, 512, NULL, log);
-		std::cout << "Create GL_FRAGMENT_SHADER Failed.Code:" << success << "Shader Source:" << fragment << std::endl;
+		std::cout << "Create GL_FRAGMENT_SHADER Failed.Code:" << success << "Shader Source:" << fragment << std::endl << log << std::endl;
 		code_ = CREATE_VERTEX_SHADER_FAILED;
 		return;
 	}

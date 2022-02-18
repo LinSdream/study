@@ -120,5 +120,14 @@
     <Image Include="assets\textures\container2.png">
       <Filter>资源文件\assets</Filter>
     </Image>
+    <Image Include="assets\textures\container2_specular.png">
+      <Filter>资源文件\assets</Filter>
+    </Image>
+    <Image Include="assets\textures\lighting_maps_specular_color.png">
+      <Filter>资源文件\assets</Filter>
+    </Image>
+    <Image Include="assets\textures\matrix.jpg">
+      <Filter>资源文件\assets</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -55,6 +55,9 @@
     <Image Include="assets\textures\awesomeface.png" />
     <Image Include="assets\textures\container.jpg" />
     <Image Include="assets\textures\container2.png" />
+    <Image Include="assets\textures\container2_specular.png" />
+    <Image Include="assets\textures\lighting_maps_specular_color.png" />
+    <Image Include="assets\textures\matrix.jpg" />
     <Image Include="assets\textures\wall.jpg" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

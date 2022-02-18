@@ -1,7 +1,6 @@
 #include<windows/window.h>
 #include<opengl/helloworld.h>
 
-void Update(Window* w,GLFWwindow* window, double delaTime,void* context);
 Context* CreateContext(int* code);
 void DestroyContext(Context* context);
 
@@ -51,7 +50,38 @@ int main()
 		context->draws_[i]->Init(window);
 	}
 
-	window->Update(Update);
+	double deltaTime = 0.0;
+	double lastFrame = 0.0f;
+
+	while (!glfwWindowShouldClose(window->GetWindow()))
+	{
+		double currentTime = glfwGetTime();
+		deltaTime = currentTime - lastFrame;
+		lastFrame = currentTime;
+
+		Context* c = (Context*)context;
+
+		float time = static_cast<float>(glfwGetTime());
+
+		DrawContext drawContext;
+		window->GetSize(&(drawContext.windowWidth_), &(drawContext.windowHeight_));
+		drawContext.aspectRatio_ = (drawContext.windowWidth_ * 1.0f) / (drawContext.windowHeight_ * 1.0f);
+		drawContext.delaTime_ = deltaTime;
+		drawContext.time_ = time;
+
+		c->env_->Background(window->GetWindow());
+		c->env_->PressInput(window->GetWindow());
+
+		int count = c->DrawsCount();
+
+		c->draws_[2]->InputDrive(window->GetWindow(), time, deltaTime);
+
+		c->draws_[2]->Update(&drawContext);
+
+		glfwSwapBuffers(window->GetWindow());
+		glfwPollEvents();
+	}
+
 	window->UnBind();
 
 	DestroyContext(context);
@@ -60,33 +90,8 @@ int main()
 	return SUCCESS;
 }
 
-void Update(Window* w,GLFWwindow* window, double delaTime,void*context)
-{
-	Context *c= (Context*)context;
-	
-	float time = static_cast<float>(glfwGetTime());
-
-	DrawContext drawContext;
-	drawContext.window_ = window;
-	drawContext.windowHeight_ = w->GetHeight();
-	drawContext.windowWidth_ = w->GetWeight();
-	drawContext.delaTime_ = delaTime;
-	drawContext.time_ = time;
-
-	c->env_->Background(window);
-	c->env_->PressInput(window);
-
-	int count = c->DrawsCount();
-	c->draws_[2]->Draw(&drawContext);
-	//for (int i = 0; i < count; i++)
-	//{
-	//	c->draws_[i]->Draw(&drawContext);
-	//}
-}
-
 Context* CreateContext(int* code)
 {
-
 	Context* context = new Context();
 	context->shaderManager_ = new ShadersManager();
 	context->camera_ = new FPS_Camera(glm::vec3(0.0f,3.0f, 3.0f));
@@ -99,15 +104,21 @@ Context* CreateContext(int* code)
 	sm->CreateShader("light", "../Shaders/light.vs", "../Shaders/light.fs");
 	sm->CreateShader("light_cube","../Shaders/light_cube.vs", "../Shaders/light_cube.fs");
 	sm->CreateShader("lightmap","../Shaders/lightmap.vs", "../Shaders/lightmap.fs");
+	sm->CreateShader("lightcasters_DirectionalLight","../Shaders/lightmap.vs", "../Shaders/lightcasters_DirectionalLight.fs");
+	sm->CreateShader("lightcasters_PointLight","../Shaders/lightmap.vs", "../Shaders/lightcasters_PointLight.fs");
+	sm->CreateShader("lightcasters_Spotlight","../Shaders/lightmap.vs", "../Shaders/lightcasters_Spotlight.fs");
 
 	context->env_ = new HelloworldGradientEnvironment();
 
-	context->InitDraws(4);
+	context->InitDraws(7);
 
 	context->draws_[0] = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
 	context->draws_[1] = new DrawCamera((*sm)["hello3D"], context->camera_);
-	context->draws_[2] = new LightingMapsDraw((*sm)["lightmap"], (*sm)["light_cube"], context->camera_);
+	context->draws_[6] = new Lightcasters_Spotlight_Draw((*sm)["lightcasters_Spotlight"], (*sm)["light_cube"], context->camera_);
 	context->draws_[3] = new LightDraw((*sm)["light"], (*sm)["light_cube"], context->camera_);
+	context->draws_[4] = new LightingMapsDraw((*sm)["lightmap"], (*sm)["light_cube"], context->camera_);
+	context->draws_[5] = new Lightcasters_DirectionalLight_Draw((*sm)["lightcasters_DirectionalLight"], (*sm)["light_cube"], context->camera_);
+	context->draws_[2] = new Lightcasters_PointLight_Draw((*sm)["lightcasters_PointLight"], (*sm)["light_cube"], context->camera_);
 
 	*code = SUCCESS;
 
