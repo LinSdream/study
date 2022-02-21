@@ -38,10 +38,16 @@ void main()
 {
     vec3 lightDir = normalize(light.position - FragPos);
 
+    //光的衰减计算,衰减值将用于乘上光的强度向量，以此达到近亮远暗
+    //公式：Fatt = 1.0 / (Kc + Kl * d + Kq * d^2)
+    //计算光到顶点的长度
+    float dist = length(light.position - FragPos);
+    float attenuation = 1.0/(light.k_constant + light.k_linear * dist + light.k_quadratic * dist * dist);
+    
     float theta = dot(lightDir,normalize(-light.direction));
     if(theta <= light.cutoff)
     {
-        FragColor = vec4(light.ambient * texture(material.diffuse,TexCoords).rgb,1.0);
+        FragColor = vec4(light.ambient * texture(material.diffuse,TexCoords).rgb ,1.0);//+ vec3(texture(material.emission,TexCoords + emissionOffset)).rgb * attenuation ,1.0) ;
         return;
     }
 
@@ -56,20 +62,15 @@ void main()
     float spec = pow(max(dot(viewDir,reflectDir),0.0),material.shininess);
     vec3 specular = spec * texture(material.specular,TexCoords).rgb * light.specular;
 
-    vec3 emission = vec3(texture(material.emission,TexCoords + emissionOffset)).rgb;
-
-    //光的衰减计算,衰减值将用于乘上光的强度向量，以此达到近亮远暗
-    //公式：Fatt = 1.0 / (Kc + Kl * d + Kq * d^2)
-    //计算光到顶点的长度
-    float dist = length(light.position - FragPos);
-    float attenuation = 1.0/(light.k_constant + light.k_linear * dist + light.k_quadratic * dist * dist);
-    
+    //vec3 emission = vec3(texture(material.emission,TexCoords + emissionOffset)).rgb;
+  
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
-    emission *= attenuation;
+    //emission *= attenuation;
 
-    vec3 result = ambient + diffuse + specular + emission;
+
+    vec3 result = ambient + diffuse + specular ;//+ emission;
 
     FragColor = vec4(result,1.0);
 }

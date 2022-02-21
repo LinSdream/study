@@ -751,9 +751,6 @@ DrawCamera::~DrawCamera()
 
 void DrawCamera::Init(const void* context)
 {
-	Window* w = (Window*)context;
-
-	//w->RegisterMousePosition(([](GLFWwindow* window, double xpos, double ypos) {Mouse_Callback(window, xpos, ypos);}));
 	
 	//OpenGL 通过glEnable 与 glDisable 来控制开启或关闭一些功能，直到调用对应的功能来关闭为止
 	//这里选择开启深度测试
@@ -806,7 +803,6 @@ void DrawCamera::Init(const void* context)
 		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 1.0f,
 	};
 
-
 	//float vertices[] = {
 	//	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
 	//	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 1.0f, 0.0f,
@@ -826,7 +822,6 @@ void DrawCamera::Init(const void* context)
 	//	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f, 0.0f,
 	//	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
 	//};
-
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
@@ -1012,7 +1007,7 @@ DrawSphere::~DrawSphere()
 
 void DrawSphere::Init(const void* context)
 {
-	Window* w = (Window*)context;
+	 
 
 	//w->RegisterMousePosition(([](GLFWwindow* window, double xpos, double ypos) {Mouse_Callback(window, xpos, ypos);}));
 
@@ -1344,51 +1339,7 @@ LightingMapsDraw::~LightingMapsDraw()
 
 void LightingMapsDraw::Init(const void* context)
 {
-	float vertices_[36 * 8] = {
-		// positions          // normals           // texture coords
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-	};
-
+	
 	vao_->Bind();
 	vbo_->Bind();
 
@@ -1690,8 +1641,7 @@ Lightcasters_Spotlight_Draw::~Lightcasters_Spotlight_Draw() {}
 void Lightcasters_Spotlight_Draw::Update(const void* context) 
 {
 	DrawContext* c = (DrawContext*)context;
-
-	glEnable(GL_DEPTH_TEST);
+	glClear(GL_DEPTH_BUFFER_BIT);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, diffuseTex_);
@@ -1712,13 +1662,14 @@ void Lightcasters_Spotlight_Draw::Update(const void* context)
 	light.k_linear = 0.09f;
 	light.k_quadratic = 0.032f;
 	//本质上是比较角度的大小，通过计算lightDir与SpotDir的向量内积，返回的是一个cos值，在gpu中计算反余弦是很不明智的，因此，在CPU这里进行计算余弦值然后比较余弦值即可、
-	light.cutOff = glm::cos(glm::radians(12.5f));
+	light.innterCutOff = glm::cos(glm::radians(12.5f));
+
 
 	shader_->Use();
-	shader_->SetFloat("material.shininess", 32.0f);
+	shader_->SetFloat("material.shininess", 256.0f);
 
-	shader_->Set3fv("light.position", VALUE_PTR(camera_->position));
-	shader_->Set3fv("light.direction", VALUE_PTR(camera_->front));
+	shader_->Set3fv("light.position", VALUE_PTR(light.position));
+	shader_->Set3fv("light.direction", VALUE_PTR(light.direction));
 	shader_->Set3fv("light.ambient", VALUE_PTR(light.ambient));
 	shader_->Set3fv("light.diffuse", VALUE_PTR(light.diffuse));
 	shader_->Set3fv("light.specular", VALUE_PTR(light.specular));
@@ -1727,7 +1678,7 @@ void Lightcasters_Spotlight_Draw::Update(const void* context)
 	shader_->SetFloat("light.k_linear", light.k_linear);
 	shader_->SetFloat("light.k_quadratic", light.k_quadratic);
 
-	shader_->SetFloat("light.cutoff", light.cutOff);
+	shader_->SetFloat("light.cutoff", light.innterCutOff);
 
 	mat4 view = camera_->GetViewMatrix();
 	mat4 projection = camera_->GetProjectionMatrix(c->aspectRatio_);
@@ -1765,4 +1716,6 @@ void Lightcasters_Spotlight_Draw::Update(const void* context)
 	lightShader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
 	lightShader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
 	lightShader_->Set3fv("lightColor", &light.color[0]);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
 }

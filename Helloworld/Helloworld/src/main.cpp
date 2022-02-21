@@ -2,6 +2,7 @@
 #include<opengl/helloworld.h>
 
 Context* CreateContext(int* code);
+void Update(Window* window, Context* context, float time, float deltaTime);
 void DestroyContext(Context* context);
 
 // api documents:<https://www.khronos.org/registry/OpenGL-Refpages/gl4/>
@@ -47,39 +48,29 @@ int main()
 	int count = context->DrawsCount();
 	for (int i = 0; i < count; i++)
 	{
-		context->draws_[i]->Init(window);
+		context->draws_[i]->Init(NULL);
 	}
 
 	double deltaTime = 0.0;
-	double lastFrame = 0.0f;
+	double lastFrame = 0.0;
 
 	while (!glfwWindowShouldClose(window->GetWindow()))
 	{
 		double currentTime = glfwGetTime();
+		float time = static_cast<float>(currentTime);
+		
 		deltaTime = currentTime - lastFrame;
 		lastFrame = currentTime;
 
-		Context* c = (Context*)context;
-
-		float time = static_cast<float>(glfwGetTime());
-
-		DrawContext drawContext;
-		window->GetSize(&(drawContext.windowWidth_), &(drawContext.windowHeight_));
-		drawContext.aspectRatio_ = (drawContext.windowWidth_ * 1.0f) / (drawContext.windowHeight_ * 1.0f);
-		drawContext.delaTime_ = deltaTime;
-		drawContext.time_ = time;
-
-		c->env_->Background(window->GetWindow());
-		c->env_->PressInput(window->GetWindow());
-
-		int count = c->DrawsCount();
-
-		c->draws_[2]->InputDrive(window->GetWindow(), time, deltaTime);
-
-		c->draws_[2]->Update(&drawContext);
+		Update(window, context, time, deltaTime);
 
 		glfwSwapBuffers(window->GetWindow());
 		glfwPollEvents();
+	}
+
+	for (int i = 0; i < count; i++)
+	{
+		context->draws_[i]->Destroy();
 	}
 
 	window->UnBind();
@@ -114,11 +105,11 @@ Context* CreateContext(int* code)
 
 	context->draws_[0] = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
 	context->draws_[1] = new DrawCamera((*sm)["hello3D"], context->camera_);
-	context->draws_[6] = new Lightcasters_Spotlight_Draw((*sm)["lightcasters_Spotlight"], (*sm)["light_cube"], context->camera_);
+	context->draws_[2] = new Lightcasters_Spotlight_Draw((*sm)["lightcasters_Spotlight"], (*sm)["light_cube"], context->camera_);
 	context->draws_[3] = new LightDraw((*sm)["light"], (*sm)["light_cube"], context->camera_);
 	context->draws_[4] = new LightingMapsDraw((*sm)["lightmap"], (*sm)["light_cube"], context->camera_);
 	context->draws_[5] = new Lightcasters_DirectionalLight_Draw((*sm)["lightcasters_DirectionalLight"], (*sm)["light_cube"], context->camera_);
-	context->draws_[2] = new Lightcasters_PointLight_Draw((*sm)["lightcasters_PointLight"], (*sm)["light_cube"], context->camera_);
+	context->draws_[6] = new Lightcasters_PointLight_Draw((*sm)["lightcasters_PointLight"], (*sm)["light_cube"], context->camera_);
 
 	*code = SUCCESS;
 
@@ -139,3 +130,18 @@ void DestroyContext(Context* context)
 	delete context;
 }
 
+void Update(Window* window, Context* c, float time, float deltaTime)
+{
+
+	DrawContext drawContext;
+	window->GetSize(&(drawContext.windowWidth_), &(drawContext.windowHeight_));
+	drawContext.aspectRatio_ = (drawContext.windowWidth_ * 1.0f) / (drawContext.windowHeight_ * 1.0f);
+	drawContext.delaTime_ = deltaTime;
+	drawContext.time_ = time;
+
+	c->env_->Background(window->GetWindow());
+	c->env_->PressInput(window->GetWindow());
+
+	c->draws_[2]->InputDrive(window->GetWindow(), time, deltaTime);
+	c->draws_[2]->Update(&drawContext);
+}

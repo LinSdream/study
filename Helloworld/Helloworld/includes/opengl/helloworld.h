@@ -31,6 +31,7 @@ public:
 
 	virtual void Init(const void* context) = 0;
 	virtual void Update(const void* context) = 0;
+	virtual void Destroy() {}
 
 	virtual void MoveCamera(float xpos, float ypos, bool constrainPitch = true)
 	{
@@ -499,6 +500,7 @@ private:
 		vec3 specular;
 
 		float cutOff;
+		float outerCutoff;
 
 		float k_constant;
 		float k_linear;
