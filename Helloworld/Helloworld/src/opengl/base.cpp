@@ -412,3 +412,139 @@ void FPS_Camera::ProcessMouseScroll(float yoffset)
 	zoom -= yoffset;
 	zoom = Clamp(zoom, 45.0f, 1.0f);
 }
+
+QuickString::QuickString() 
+{
+	capacity_ = 32;
+	length_ = 0;
+	str_ = new char[capacity_];
+}
+
+QuickString::QuickString(uint _capacity) 
+{
+	capacity_ = _capacity;
+	length_ = 0;
+	str_ = new char[capacity_];
+}
+
+QuickString::QuickString(const QuickString& _s) 
+{
+	capacity_ = _s.capacity_;
+	length_ = _s.length_;
+	str_ = new char[capacity_];
+	//std::strcpy(str_, _s.str_);
+}
+
+QuickString::~QuickString() 
+{
+	delete str_;
+	capacity_ = 0;
+	length_ = 0;
+}
+
+void QuickString::ResetSize(uint _capacity) 
+{
+	if (length_ < _capacity) throw "The capacity is smaller than the current length";
+	char* s = new char[_capacity];
+	//std::strcpy(s, str_);
+	delete[] str_;
+	str_ = s;
+}
+
+QuickString& QuickString::Append(const char* _s) 
+{
+	uint size = std::strlen(_s) + length_;
+	if (size >= capacity_) 
+	{
+		uint capacity = 2 * capacity_;
+		do 
+		{
+			capacity *= 2;
+		} while (capacity >size);
+		ResetSize(capacity);
+	}
+	length_ = size;
+	//std::strcat(str_, _s);
+	return *this;
+}
+
+QuickString& QuickString::Append(const QuickString& _s) 
+{
+	uint size = std::strlen(_s.str_) + length_;
+	if (size >= capacity_)
+	{
+		uint capacity = 2 * capacity_;
+		do
+		{
+			capacity *= 2;
+		} while (capacity > size);
+		ResetSize(capacity);
+	}
+	length_ = size;
+	//std::strcat(str_, _s.str_);
+	return *this;
+}
+
+QuickString& QuickString::operator+(const char* _s) 
+{
+	return Append(_s);
+}
+
+QuickString& QuickString::operator+(const QuickString& _s)
+{
+	return Append(_s);
+}
+
+QuickString& QuickString::operator-(const char* _s)
+{
+	uint length = std::strlen(_s);
+	if (length > length_) throw "string to long";
+
+	uint index = length_ - length - 1;
+	bool flag = true;
+	for (int i = 0;i < length;i++)
+	{
+		if (str_[index++] != _s[i++]) 
+		{
+			flag = false;
+			break;
+		}
+	}
+	if (!flag) return *this;
+	index = length_ - length - 1;
+	for (;index < length_;index++) 
+	{
+		str_[index] = '\0';
+	}
+	return *this;
+}
+
+QuickString& QuickString::operator-(const QuickString& _s)
+{
+	uint length = _s.length_;
+	if (length > length_) throw "string to long";
+
+	uint index = length_ - length - 1;
+	bool flag = true;
+	for (int i = 0;i < length;i++)
+	{
+		if (str_[index++] != _s.str_[i++])
+		{
+			flag = false;
+			break;
+		}
+	}
+	if (!flag) return *this;
+	index = length_ - length - 1;
+	for (;index < length_;index++)
+	{
+		str_[index] = '\0';
+	}
+	return *this;
+}
+
+std::ostream& operator <<(std::ostream& _o, QuickString& _s)
+{
+	_o << _s.str_;
+	return _o;
+}

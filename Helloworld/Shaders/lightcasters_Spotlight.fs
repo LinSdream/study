@@ -14,7 +14,8 @@ struct Light
     float k_linear;
     float k_quadratic;
 
-    float cutoff;
+    float innterCutOff;
+    float outerCutOff;
 };
 
 struct Material
@@ -45,11 +46,12 @@ void main()
     float attenuation = 1.0/(light.k_constant + light.k_linear * dist + light.k_quadratic * dist * dist);
     
     float theta = dot(lightDir,normalize(-light.direction));
-    if(theta <= light.cutoff)
-    {
-        FragColor = vec4(light.ambient * texture(material.diffuse,TexCoords).rgb ,1.0);//+ vec3(texture(material.emission,TexCoords + emissionOffset)).rgb * attenuation ,1.0) ;
-        return;
-    }
+
+    // doc:<https://learnopengl-cn.github.io/02%20Lighting/05%20Light%20casters/#_9>
+    //平滑边缘，实际上就是在两个光锥，内锥和外锥，内外锥之间的余弦值进行差值。
+    //公式： I = (θ-γ)/ε;ε = (φ-γ)   ε:内圆锥(φ) 与外圆锥(γ)的余弦值差值 。θ：内圆锥余弦值，γ：外圆锥余弦值
+    float epsilon = light.innterCutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon , 0.0 ,1.0);
 
     vec3 ambient = light.ambient * texture(material.diffuse,TexCoords).rgb;
 
@@ -69,6 +71,9 @@ void main()
     specular *= attenuation;
     //emission *= attenuation;
 
+    ambient *= intensity;
+    diffuse *= intensity;
+    specular *= intensity;
 
     vec3 result = ambient + diffuse + specular ;//+ emission;
 

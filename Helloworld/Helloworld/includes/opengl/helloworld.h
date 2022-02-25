@@ -112,7 +112,11 @@ public:
 
 protected:
 
-	const vec3 normalVec3 = vec3(1.0f, 1.0f, 1.0f);
+	const vec3 normal = vec3(1.0f, 1.0f, 1.0f);
+	const vec3 up = vec3(0.0f, 1.0f, 0.0f);
+	const vec3 right = vec3(1.0f, 0.0f, 0.0f);
+	const vec3 front = vec3(0.0f, 0.0f, 1.0f);
+	const vec3 zero = vec3(0.0f);
 
 	Shader* lightShader_;
 	VAOContext* vao_;
@@ -499,11 +503,58 @@ private:
 		vec3 diffuse;
 		vec3 specular;
 
-		float cutOff;
-		float outerCutoff;
+		float innterCutOff;
+		float outerCutOff;
 
 		float k_constant;
 		float k_linear;
 		float k_quadratic;
 	};
+};
+
+class MultiLight :public Lightcasters_DirectionalLight_Draw
+{
+public:
+	MultiLight(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera);
+	~MultiLight();
+
+	void Update(const void* context);
+
+private:
+	
+#define NR_POINTER_LIGHTS 4
+
+	struct DirectionLight
+	{
+		vec3 direction;
+
+		vec3 diffuse;
+		vec3 specular;
+		vec3 ambient;
+	};
+
+	struct PointLight 
+	{
+		vec3 position;
+
+		vec3 diffuse;
+		vec3 specular;
+		vec3 ambient;
+
+		float k_constant;
+		float k_linear;
+		float k_quadratic;
+	};
+
+	vec3 pointLightPositions_[NR_POINTER_LIGHTS] =
+	{
+		vec3(0.7f,  0.2f,  2.0f),
+		vec3(2.3f, -3.3f, -4.0f),
+		vec3(-4.0f,  2.0f, -12.0f),
+		vec3(0.0f,  0.0f, -3.0f)
+	};
+
+	void SetDirectionLight(DirectionLight light);
+	void SetPointLight(PointLight light[],int length);
+
 };

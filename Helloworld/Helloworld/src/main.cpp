@@ -13,6 +13,12 @@ int main()
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif // _DEBUG
 
+
+	//QuickString s;
+	//s.Append("123123123");
+	//std::cout << s << std::endl;
+	//return 0;
+
 	Window* window = new Window(800, 600, (char*)"hello world",
 		[](GLFWwindow* window, int width, int height) {glViewport(0, 0, width, height); });
 
@@ -98,18 +104,20 @@ Context* CreateContext(int* code)
 	sm->CreateShader("lightcasters_DirectionalLight","../Shaders/lightmap.vs", "../Shaders/lightcasters_DirectionalLight.fs");
 	sm->CreateShader("lightcasters_PointLight","../Shaders/lightmap.vs", "../Shaders/lightcasters_PointLight.fs");
 	sm->CreateShader("lightcasters_Spotlight","../Shaders/lightmap.vs", "../Shaders/lightcasters_Spotlight.fs");
+	sm->CreateShader("multilight","../Shaders/lightmap.vs", "../Shaders/multilight.fs");
 
 	context->env_ = new HelloworldGradientEnvironment();
 
-	context->InitDraws(7);
+	context->InitDraws(8);
 
 	context->draws_[0] = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
 	context->draws_[1] = new DrawCamera((*sm)["hello3D"], context->camera_);
-	context->draws_[2] = new Lightcasters_Spotlight_Draw((*sm)["lightcasters_Spotlight"], (*sm)["light_cube"], context->camera_);
+	context->draws_[2] = new MultiLight((*sm)["multilight"], (*sm)["light_cube"], context->camera_);
 	context->draws_[3] = new LightDraw((*sm)["light"], (*sm)["light_cube"], context->camera_);
 	context->draws_[4] = new LightingMapsDraw((*sm)["lightmap"], (*sm)["light_cube"], context->camera_);
 	context->draws_[5] = new Lightcasters_DirectionalLight_Draw((*sm)["lightcasters_DirectionalLight"], (*sm)["light_cube"], context->camera_);
 	context->draws_[6] = new Lightcasters_PointLight_Draw((*sm)["lightcasters_PointLight"], (*sm)["light_cube"], context->camera_);
+	context->draws_[7] = new Lightcasters_Spotlight_Draw((*sm)["lightcasters_Spotlight"], (*sm)["light_cube"], context->camera_);
 
 	*code = SUCCESS;
 

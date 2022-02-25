@@ -318,3 +318,35 @@ protected:
 	virtual void UpdateCameraVectors();
 
 };
+
+///‘›Œ¥—È÷§
+class QuickString 
+{
+public:
+
+	QuickString(uint _capacity);
+	QuickString(const QuickString& _s);
+	QuickString();
+	~QuickString();
+
+	void ResetSize(uint _capacity);
+	QuickString& Append(const char* _s);
+	QuickString& Append(const QuickString& _s);
+
+	uint Length() const { return length_; }
+	uint Capacity() const { return capacity_; }
+
+	QuickString& operator+(const char* _s);
+	QuickString& operator-(const char* _s);
+
+	QuickString& operator+(const QuickString& _s);
+	QuickString& operator-(const QuickString& _s);
+
+	friend std::ostream& operator <<(std::ostream& _o, QuickString& _s);
+
+private:
+
+	char* str_;
+	uint capacity_;
+	uint length_;
+};

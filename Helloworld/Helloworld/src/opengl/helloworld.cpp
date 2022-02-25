@@ -1008,7 +1008,6 @@ DrawSphere::~DrawSphere()
 void DrawSphere::Init(const void* context)
 {
 	 
-
 	//w->RegisterMousePosition(([](GLFWwindow* window, double xpos, double ypos) {Mouse_Callback(window, xpos, ypos);}));
 
 	//OpenGL 通过glEnable 与 glDisable 来控制开启或关闭一些功能，直到调用对应的功能来关闭为止
@@ -1020,13 +1019,9 @@ void DrawSphere::Init(const void* context)
 
 	std::vector<float> vertices;
 
-
-
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(float)*count, vertices, GL_DYNAMIC_DRAW);
 
 	ebo_->Bind();
-
-
 
 	uint indices[] =
 	{
@@ -1584,10 +1579,10 @@ void Lightcasters_PointLight_Draw::Update(const void* context)
 
 	Light light;
 	light.position = vec3(1.2f, 1.0f, 2.0f);
-	light.ambient = normalVec3 * vec3(0.2f);
-	light.color = normalVec3;
-	light.diffuse = normalVec3 * vec3(0.5f);
-	light.specular = normalVec3 * vec3(1.0f);
+	light.ambient = normal * vec3(0.2f);
+	light.color = normal;
+	light.diffuse = normal * vec3(0.5f);
+	light.specular = normal * vec3(1.0f);
 	light.k_constant = 1.0f;
 	light.k_linear = 0.09f;
 	light.k_quadratic = 0.032f;
@@ -1651,19 +1646,22 @@ void Lightcasters_Spotlight_Draw::Update(const void* context)
 	glBindTexture(GL_TEXTURE_2D, emissionTex_);
 
 	Light light;
-	light.position = vec3(1.2f, 1.0f, 2.0f);
-	vec3 lightDir = cubePositions_[0] - light.position;
+	light.position = vec3(1.2f, sin(c->time_), 2.0f);
+
+	vec3 lightRight = glm::cross(light.position, vec3(0.0f, 1.0f, 0.0f));
+	//vec3 lightDir = cubePositions_[0] - light.position;
+	vec3 lightDir = glm::cross(lightRight, vec3(0.0f, 1.0f, 0.0f));
+	light.color = vec3(1.0f,0.0f,0.0f);
 	light.direction = glm::normalize(lightDir);
-	light.ambient = normalVec3 * vec3(0.2f);
-	light.color = normalVec3;
-	light.diffuse = normalVec3 * vec3(0.5f);
-	light.specular = normalVec3 * vec3(1.0f);
+	light.ambient = normal * vec3(0.2f);
+	light.diffuse = light.color * vec3(0.5f);
+	light.specular = light.color * vec3(3.0f);
 	light.k_constant = 1.0f;
 	light.k_linear = 0.09f;
 	light.k_quadratic = 0.032f;
 	//本质上是比较角度的大小，通过计算lightDir与SpotDir的向量内积，返回的是一个cos值，在gpu中计算反余弦是很不明智的，因此，在CPU这里进行计算余弦值然后比较余弦值即可、
 	light.innterCutOff = glm::cos(glm::radians(12.5f));
-
+	light.outerCutOff = glm::cos(glm::radians(17.5f));
 
 	shader_->Use();
 	shader_->SetFloat("material.shininess", 256.0f);
@@ -1678,7 +1676,8 @@ void Lightcasters_Spotlight_Draw::Update(const void* context)
 	shader_->SetFloat("light.k_linear", light.k_linear);
 	shader_->SetFloat("light.k_quadratic", light.k_quadratic);
 
-	shader_->SetFloat("light.cutoff", light.innterCutOff);
+	shader_->SetFloat("light.innterCutOff", light.innterCutOff);
+	shader_->SetFloat("light.outerCutOff", light.outerCutOff);
 
 	mat4 view = camera_->GetViewMatrix();
 	mat4 projection = camera_->GetProjectionMatrix(c->aspectRatio_);
@@ -1718,4 +1717,124 @@ void Lightcasters_Spotlight_Draw::Update(const void* context)
 	lightShader_->Set3fv("lightColor", &light.color[0]);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
+}
+
+
+MultiLight::MultiLight(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera) :Lightcasters_DirectionalLight_Draw(cubeShader, lightShader, camera) {}
+MultiLight::~MultiLight() {}
+
+void MultiLight::Update(const void* context) 
+{
+	DrawContext* c = (DrawContext*)context;
+	glClear(GL_DEPTH_TEST);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, diffuseTex_);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, specularTex_);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, emissionTex_);
+
+	shader_->Use();
+	DirectionLight dirLight;
+
+	dirLight.direction = vec3(-0.2f, -1.0f, -0.3f);
+	dirLight.ambient = normal * vec3(0.2f);
+	dirLight.diffuse = normal * vec3(0.5f);
+	dirLight.specular = normal * vec3(2.0f);
+
+	SetDirectionLight(dirLight);
+
+	PointLight pointLights[NR_POINTER_LIGHTS];
+
+	for (int i = 0;i < NR_POINTER_LIGHTS;i++) 
+	{
+		pointLights[i].position = pointLightPositions_[i];
+		pointLights[i].ambient = normal * vec3(0.2f);
+		pointLights[i].diffuse = normal * vec3(0.5f);
+		pointLights[i].specular = normal * vec3(1.0f);
+		pointLights[i].k_constant = 1.0f;
+		pointLights[i].k_linear = 0.09f;
+		pointLights[i].k_quadratic = 0.032f;
+	}
+
+	SetPointLight(pointLights, NR_POINTER_LIGHTS);
+
+	shader_->SetFloat("material.diffuse", 0);
+	shader_->SetFloat("material.specular", 1);
+	shader_->SetFloat("material.emission", 2);
+	shader_->SetFloat("material.shininess", 0.5f);
+
+	shader_->Set3fv("viewPos", VALUE_PTR(camera_->position));
+	shader_->Set2f("viewPos", 0.0f, sin(c->time_) / 2);
+
+	vao_->Bind();
+	for (int i = 0;i < 10;i++)
+	{
+		mat4 model = mat4(1.0f);
+		mat3 normalMat = mat3(1.0f);
+
+		float angle = 20.0f * i;
+		model = glm::translate(model, cubePositions_[i]);
+		model = glm::rotate(model, glm::radians(angle) * c->time_, vec3(1.0f, 0.3f, 0.5f));
+
+		normalMat = glm::transpose(glm::inverse(model));
+		shader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(model));
+		shader_->SetMatrix3fv("normalMatrix", 1, GL_FALSE, VALUE_PTR(normalMat));
+
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+}
+
+void MultiLight::SetPointLight(PointLight lights[], int length) 
+{
+	std::string key;
+	std::string prefix;
+
+	key.reserve(128);
+	prefix.reserve(32);
+
+	for (int i = 0;i < length;i++) 
+	{
+		prefix.clear();
+		prefix = prefix.append("pointLights[").append(std::to_string(i)).append("].");
+
+		key = key.append(prefix).append("position");
+		shader_->Set3fv(key.c_str(), &lights[i].position[0]);
+		key.clear();
+
+		key = key.append(prefix).append("diffuse");
+		shader_->Set3fv(key.c_str(), &lights[i].diffuse[0]);
+		key.clear();
+
+		key = key.append(prefix).append("ambient");
+		shader_->Set3fv(key.c_str(), &lights[i].ambient[0]);
+		key.clear();
+
+		key = key.append(prefix).append("specular");
+		shader_->Set3fv(key.c_str(), &lights[i].specular[0]);
+		key.clear();
+
+		key = key.append(prefix).append("k_constant");
+		shader_->SetFloat(key.c_str(), lights[i].k_constant);
+		key.clear();
+
+		key = key.append(prefix).append("k_linear");
+		shader_->SetFloat(key.c_str(), lights[i].k_constant);
+		key.clear();
+
+		key = key.append(prefix).append("k_quadratic");
+		shader_->SetFloat(key.c_str(), lights[i].k_constant);
+		key.clear();
+	}
+}
+
+void MultiLight::SetDirectionLight(DirectionLight light) 
+{
+	shader_->Set3fv("light.direction", &light.direction[0]);
+	shader_->Set3fv("light.diffuse", &light.diffuse[0]);
+	shader_->Set3fv("light.ambient", &light.ambient[0]);
+	shader_->Set3fv("light.specular", &light.specular[0]);
 }
