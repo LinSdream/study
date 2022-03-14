@@ -1,8 +1,11 @@
 #pragma once
-#include<opengl/helperFun.h>
-#include<glm/glm.hpp>
-#include<glm/gtc/matrix_transform.hpp>
-#include<glm/gtc/type_ptr.hpp>
+#include <opengl/helperFun.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include<iostream>
 #include<map>
@@ -168,6 +171,23 @@
 //	};
 //}
 
+class System 
+{
+public:
+
+	void Init(int args, char** argv);
+	void Destroy();
+
+	static System& Instance();
+	std::string GetProjectDir() const;
+	std::string GetCurrentWorkDir() const;
+
+private:
+
+	std::string projectDir_;
+	std::string workDir_;
+};
+
 class HelloworldEnvironment
 {
 
@@ -316,6 +336,61 @@ public:
 protected:
 
 	virtual void UpdateCameraVectors();
+
+};
+
+struct Vertex 
+{
+	glm::vec3 position;
+	glm::vec3 normal;
+	glm::vec2 texCoords;
+};
+
+struct Texture
+{
+	uint id;
+	std::string type;
+	aiString path;
+};
+
+class Mesh 
+{
+
+public:
+
+	std::vector<Vertex> vertices;
+	std::vector<uint> indices;
+	std::vector<Texture> textures;
+
+	Mesh(std::vector<Vertex> vertices, std::vector<uint> indices, std::vector<Texture> textures);
+	void Draw(Shader& shader);
+
+private:
+
+	uint VAO_;
+	uint VBO_;
+	uint EBO_;
+
+	void SetupMesh();
+};
+
+class Model 
+{
+public :
+
+	Model(const char* path);
+	void Draw(Shader& shader);
+
+private:
+
+	std::vector<Mesh> meshes_;
+	std::string directory_;
+	void LoadModel(const char* path);
+	void ProcessNode(aiNode* node, const aiScene* scene);
+	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
+	std::vector<Texture> LoadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
+
+	std::vector<Texture> textures_loaded;
 
 };
 

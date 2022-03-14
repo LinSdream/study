@@ -8,6 +8,7 @@ struct Light
     vec3 direction;
     vec3 ambient;
     vec3 diffuse;
+    sampler2D texture;
     vec3 specular;
 
     float k_constant;
@@ -58,6 +59,7 @@ void main()
     vec3 norm = normalize(normal);
     float diff = max(dot(lightDir ,norm),0.0);
     vec3 diffuse = diff * texture(material.diffuse,TexCoords).rgb * light.diffuse;
+    //vec3 diffuse = diff * texture(material.diffuse,TexCoords).rgb + texture(light.texture,TexCoords).rgb ;//* light.diffuse;
 
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir,norm);

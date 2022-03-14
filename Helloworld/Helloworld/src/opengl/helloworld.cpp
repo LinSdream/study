@@ -3,8 +3,33 @@
 #include<stb/stb_image.h>
 #include<windows/window.h>
 
-bool LoadImage2D(uint* textureID, const char* path, GLint wrapST_param, GLint filter_param)
+        //\          Seeyou           /
+        // \                         /
+        //  \    Too Hard	        /
+        //   ]   not o l		   [    ,'|
+        //   ]                     [   /  |
+        //   ]___               ___[ ,'   |
+        //   ]  ]\             /[  [ |:   |
+        //   ]  ] \           / [  [ |:   |
+        //   ]  ]  ]         [  [  [ |:   |
+        //   ]  ]  ]__     __[  [  [ |:   |
+        //   ]  ]  ] ]\ _ /[ [  [  [ |:   |
+        //   ]  ]  ] ] (#) [ [  [  [ :===='
+        //   ]  ]  ]_].nHn.[_[  [  [
+        //   ]  ]  ]  HHHHH. [  [  [
+        //   ]  ] /   `HH("N  \ [  [
+        //   ]__]/     HHH  "  \[__[
+        //   ]         NNN         [
+        //   ]         N/"         [
+        //   ]         N H         [
+        //  /          N            \
+        // /           q,            \
+        ///                           \
+
+bool LoadImage2D(const uint* textureID, const char* path, GLint wrapST_param, GLint filter_param)
 {
+
+	if (path == NULL || std::strlen(path) == 0) return false;
 
 	stbi_set_flip_vertically_on_load(true);
 	int width, height, nrChannels;
@@ -84,7 +109,6 @@ void DrawTriangle::Init(const void* context)
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-
 	//先设置为默认值,由于后面在Draw有重新进行绑定，所以其实可以不用，但是为了严谨这里还是进行一次的设置
 	//通过绑定0，来将当前的缓冲区设为默认值
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -160,7 +184,7 @@ void DrawRectangle::Init(const void* context)
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(6 * sizeof(float)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(6 * sizeof(float)));	
 	glEnableVertexAttribArray(2);
 
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(8 * sizeof(float)));
@@ -1444,7 +1468,6 @@ Lightcasters_DirectionalLight_Draw::~Lightcasters_DirectionalLight_Draw() {}
 
 void Lightcasters_DirectionalLight_Draw::Init(const void* context) 
 {
-	
 	vao_->Bind();
 	vbo_->Bind();
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_, GL_STATIC_DRAW);
@@ -1477,7 +1500,6 @@ void Lightcasters_DirectionalLight_Draw::Init(const void* context)
 
 void Lightcasters_DirectionalLight_Draw::Update(const void* context)
 {
-
 	DrawContext* c = (DrawContext*)context;
 	glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -1630,8 +1652,50 @@ void Lightcasters_PointLight_Draw::Update(const void* context)
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-Lightcasters_Spotlight_Draw::Lightcasters_Spotlight_Draw(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera) :Lightcasters_DirectionalLight_Draw(cubeShader, lightShader, camera) {}
-Lightcasters_Spotlight_Draw::~Lightcasters_Spotlight_Draw() {}
+Lightcasters_Spotlight_Draw::Lightcasters_Spotlight_Draw(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera) :Lightcasters_DirectionalLight_Draw(cubeShader, lightShader, camera) 
+{
+	glGenTextures(1, &lightTexture_);
+}
+Lightcasters_Spotlight_Draw::~Lightcasters_Spotlight_Draw() 
+{
+	glDeleteTextures(1, &lightTexture_);
+}
+
+void Lightcasters_Spotlight_Draw::Init(const void* context)
+{
+	vao_->Bind();
+	vbo_->Bind();
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	bool success = LoadImage2D(&diffuseTex_, "./assets/textures/container2.png", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	success = LoadImage2D(&specularTex_, "./assets/textures/container2_specular.png", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	success = LoadImage2D(&emissionTex_, "./assets/textures/matrix.jpg", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	success = LoadImage2D(&lightTexture_, "./assets/textures/girl.jpg", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	lightVAO_->Bind();
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	shader_->Use();
+	shader_->SetInt("material.diffuse", 0);
+	shader_->SetInt("material.specular", 1);
+	shader_->SetInt("material.emission", 2);
+	shader_->SetInt("light.texture", 3);
+}
 
 void Lightcasters_Spotlight_Draw::Update(const void* context) 
 {
@@ -1644,6 +1708,8 @@ void Lightcasters_Spotlight_Draw::Update(const void* context)
 	glBindTexture(GL_TEXTURE_2D, specularTex_);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, emissionTex_);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, lightTexture_);
 
 	Light light;
 	light.position = vec3(1.2f, sin(c->time_), 2.0f);
@@ -1720,41 +1786,99 @@ void Lightcasters_Spotlight_Draw::Update(const void* context)
 }
 
 
-MultiLight::MultiLight(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera) :Lightcasters_DirectionalLight_Draw(cubeShader, lightShader, camera) {}
-MultiLight::~MultiLight() {}
+MultiLight::MultiLight(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera) :Lightcasters_DirectionalLight_Draw(cubeShader, lightShader, camera) ,texturesCount_(4)
+{
+	textures_ = new uint[texturesCount_];
+	glGenTextures(texturesCount_, textures_);
+}
+MultiLight::~MultiLight() 
+{
+	glDeleteTextures(texturesCount_, textures_);
+	delete[] textures_;
+}
+
+void MultiLight::Init(const void* context)
+{
+	vao_->Bind();
+	vbo_->Bind();
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), vertices_, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	bool success = LoadImage2D(textures_, "./assets/textures/container2.png", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	success = LoadImage2D(textures_+1, "./assets/textures/container2_specular.png", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	success = LoadImage2D(&textures_[2], "./assets/textures/matrix.jpg", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	success = LoadImage2D(&textures_[3], "./assets/textures/girl.jpg", GL_REPEAT, GL_NEAREST);
+	if (!success) return;
+
+	lightVAO_->Bind();
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	shader_->Use();
+	shader_->SetInt("material.diffuse", 0);
+	shader_->SetInt("material.specular", 1);
+	shader_->SetInt("material.emission", 2);
+	shader_->SetInt("spotLight.diffuse", 3);
+
+}
 
 void MultiLight::Update(const void* context) 
 {
 	DrawContext* c = (DrawContext*)context;
-	glClear(GL_DEPTH_TEST);
+	glClear(GL_DEPTH_BUFFER_BIT);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, diffuseTex_);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specularTex_);
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, emissionTex_);
+	for (int i = 0;i < texturesCount_;i++) 
+	{
+		glActiveTexture(TextureNum(i));
+		glBindTexture(GL_TEXTURE_2D, textures_[i]);
+	}
 
 	shader_->Use();
 	DirectionLight dirLight;
 
 	dirLight.direction = vec3(-0.2f, -1.0f, -0.3f);
-	dirLight.ambient = normal * vec3(0.2f);
-	dirLight.diffuse = normal * vec3(0.5f);
-	dirLight.specular = normal * vec3(2.0f);
+	dirLight.ambient = normal * vec3(0.05f);
+	dirLight.diffuse = normal * vec3(0.04f);
+	dirLight.specular = normal * vec3(0.05f);
 
 	SetDirectionLight(dirLight);
+
+	SpotLight spotLight;
+	spotLight.position = camera_->position;
+	spotLight.direction = camera_->front;
+	spotLight.color = normal;
+	spotLight.ambient = normal * vec3(0.0f);
+	spotLight.diffuse = normal * vec3(1.0f);
+	spotLight.specular = normal * vec3(1.0f);
+	spotLight.innterCutOff = glm::cos(glm::radians(12.5f));
+	spotLight.outerCutOff = glm::cos(glm::radians(15.0f));
+	spotLight.k_constant = 1.0f;
+	spotLight.k_linear = 0.09f;
+	spotLight.k_quadratic = 0.032f;
+	SetSpotLight(spotLight);
 
 	PointLight pointLights[NR_POINTER_LIGHTS];
 
 	for (int i = 0;i < NR_POINTER_LIGHTS;i++) 
 	{
 		pointLights[i].position = pointLightPositions_[i];
-		pointLights[i].ambient = normal * vec3(0.2f);
-		pointLights[i].diffuse = normal * vec3(0.5f);
-		pointLights[i].specular = normal * vec3(1.0f);
+		pointLights[i].color = vec3(glm::sin(2 * i + 60), glm::cos(2 * i + 45), glm::sin(3 * i + 30));
+		pointLights[i].ambient = pointLights[i].color * vec3(0.05f);
+		pointLights[i].diffuse = pointLights[i].color * vec3(0.2f);
+		pointLights[i].specular = pointLights[i].color * vec3(0.2f);
+		//pointLights[i].specular = pointLights[i].color * vec3(1.0f);
 		pointLights[i].k_constant = 1.0f;
 		pointLights[i].k_linear = 0.09f;
 		pointLights[i].k_quadratic = 0.032f;
@@ -1767,8 +1891,13 @@ void MultiLight::Update(const void* context)
 	shader_->SetFloat("material.emission", 2);
 	shader_->SetFloat("material.shininess", 0.5f);
 
+	mat4 view = camera_->GetViewMatrix();
+	mat4 projection = camera_->GetProjectionMatrix(c->aspectRatio_);
+
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
 	shader_->Set3fv("viewPos", VALUE_PTR(camera_->position));
-	shader_->Set2f("viewPos", 0.0f, sin(c->time_) / 2);
+	shader_->Set2f("emissionOffset", 0.0f, sin(c->time_) / 2);
 
 	vao_->Bind();
 	for (int i = 0;i < 10;i++)
@@ -1778,7 +1907,7 @@ void MultiLight::Update(const void* context)
 
 		float angle = 20.0f * i;
 		model = glm::translate(model, cubePositions_[i]);
-		model = glm::rotate(model, glm::radians(angle) * c->time_, vec3(1.0f, 0.3f, 0.5f));
+		//model = glm::rotate(model, glm::radians(angle) * c->time_, vec3(1.0f, 0.3f, 0.5f));
 
 		normalMat = glm::transpose(glm::inverse(model));
 		shader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(model));
@@ -1786,6 +1915,23 @@ void MultiLight::Update(const void* context)
 
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
+
+	lightVAO_->Bind();
+	lightShader_->Use();
+	for (int i = 0;i < NR_POINTER_LIGHTS;i++) 
+	{
+		mat4 lightMat = mat4(1.0f);
+		lightMat = glm::translate(lightMat, pointLightPositions_[i]);
+		lightMat = glm::scale(lightMat, vec3(0.2f));
+
+		lightShader_->Use();
+		lightShader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(lightMat));
+		lightShader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+		lightShader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+		lightShader_->Set3fv("lightColor",VALUE_PTR(pointLights[i].color));
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+
 }
 
 void MultiLight::SetPointLight(PointLight lights[], int length) 
@@ -1833,8 +1979,89 @@ void MultiLight::SetPointLight(PointLight lights[], int length)
 
 void MultiLight::SetDirectionLight(DirectionLight light) 
 {
-	shader_->Set3fv("light.direction", &light.direction[0]);
-	shader_->Set3fv("light.diffuse", &light.diffuse[0]);
-	shader_->Set3fv("light.ambient", &light.ambient[0]);
-	shader_->Set3fv("light.specular", &light.specular[0]);
+	shader_->Set3fv("dirLight.direction", &light.direction[0]);
+	shader_->Set3fv("dirLight.diffuse", &light.diffuse[0]);
+	shader_->Set3fv("dirLight.ambient", &light.ambient[0]);
+	shader_->Set3fv("dirLight.specular", &light.specular[0]);
+}
+
+void MultiLight::SetSpotLight(SpotLight light) 
+{
+	shader_->Set3fv("spotLight.position", VALUE_PTR(light.position));
+	shader_->Set3fv("spotLight.direction", VALUE_PTR(light.direction));
+	shader_->Set3fv("spotLight.ambient", VALUE_PTR(light.ambient));
+	shader_->Set3fv("spotLight.diffuse", VALUE_PTR(light.diffuse));
+	shader_->Set3fv("spotLight.specular", VALUE_PTR(light.specular));
+
+	shader_->SetFloat("spotLight.constant", light.k_constant);
+	shader_->SetFloat("spotLight.linear", light.k_linear);
+	shader_->SetFloat("spotLight.quadratic", light.k_quadratic);
+
+	shader_->SetFloat("spotLight.innterCutOff", light.innterCutOff);
+	shader_->SetFloat("spotLight.outerCutOff", light.outerCutOff);
+}
+
+void RenderModel::InputDrive(GLFWwindow* window, float time, float delaTime) 
+{
+	float speed = cameraSpeed_ * delaTime;
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) 
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::FORWARD, delaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::BACKWARD, delaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::RIGHT, delaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera_->ProcessKeyboard(FPS_Camera::ECameraMovement::LEFT, delaTime);
+}
+
+void RenderModel::MoveCamera(float xpos, float ypos, bool constrainPitch) 
+{
+	if (firstMouse_) 
+	{
+		lastX_ = xpos;
+		lastY_ = ypos;
+		firstMouse_ = false;
+	}
+	float xoffset = xpos - lastX_;
+	float yoffset = lastY_ - ypos;
+
+	lastX_ = xpos;
+	lastY_ = ypos;
+
+	camera_->ProcessMouseMovement(xoffset, yoffset, constrainPitch);
+}
+
+RenderModel::RenderModel(const char* modelPath, Shader* shader, FPS_Camera* camera) :DrawBase(shader, camera)
+{
+	model_ = new Model(modelPath);
+}
+
+RenderModel::~RenderModel() 
+{
+	delete model_;
+}
+
+void RenderModel::Init(const void* context) 
+{
+
+}
+
+void RenderModel::Update(const void* context) 
+{
+	DrawContext* c = (DrawContext*)context;
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	shader_->Use();
+	mat4 projection = camera_->GetProjectionMatrix(c->aspectRatio_, 0.1f, 100.0f);
+	mat4 view = camera_->GetViewMatrix();
+	shader_->SetMatrix4fv("projection", 1, GL_FALSE, VALUE_PTR(projection));
+	shader_->SetMatrix4fv("view", 1, GL_FALSE, VALUE_PTR(view));
+	mat4 model = mat4(1.0f);
+	model = glm::translate(model, zero);
+	model = glm::scale(model, normal);
+
+	shader_->SetMatrix4fv("model", 1, GL_FALSE, VALUE_PTR(model));
+	
+	model_->Draw(*shader_);
 }

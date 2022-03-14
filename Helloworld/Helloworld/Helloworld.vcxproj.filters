@@ -19,6 +19,9 @@
     <Filter Include="资源文件\assets">
       <UniqueIdentifier>{81525494-b187-4dd1-af3b-61ad99db6fd6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="资源文件\model">
+      <UniqueIdentifier>{47adbaaf-468c-475f-b015-98a457a6c627}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\glad\glad.h">
@@ -73,41 +76,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Shaders\helloworld.fs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-    <None Include="..\Shaders\helloworld.vs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-    <None Include="..\Shaders\textures.fs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-    <None Include="..\Shaders\textures.vs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-    <None Include="..\Shaders\hello3d.vs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-    <None Include="..\Shaders\light.vs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-    <None Include="..\Shaders\light.fs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-    <None Include="..\Shaders\light_cube.fs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-    <None Include="..\Shaders\light_cube.vs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-    <None Include="..\Shaders\lightmap.fs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-    <None Include="..\Shaders\lightmap.vs">
-      <Filter>资源文件\shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="assets\textures\awesomeface.png">
       <Filter>资源文件\assets</Filter>
     </Image>
@@ -129,5 +97,52 @@
     <Image Include="assets\textures\matrix.jpg">
       <Filter>资源文件\assets</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\Shaders\hello3d.vs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\helloworld.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\helloworld.vs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\light.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\light.vs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\light_cube.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\light_cube.vs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\lightcasters_DirectionalLight.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\lightcasters_PointLight.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\lightcasters_Spotlight.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\lightmap.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\lightmap.vs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\multilights.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\textures.fs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\textures.vs">
+      <Filter>资源文件\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -1,4 +1,40 @@
 #include<opengl/base.h>
+#include<opengl/helperFun.h>
+
+#ifdef _WIN32
+#include <direct.h>
+#elif __linux__ || __APPLE__
+#include<unistd.h>
+#endif
+
+#ifdef _WIN32
+#define GET_CWD(buffer,bytesSize) _getcwd(buffer, bytesSize)
+#elif __linux__ || __APPLE__
+#define GET_CWD(buffer,bytesSize) getcwd(buffer, bytesSize)
+#else
+#define GET_CWD(buffer,bytesSize) "ERROR::Can't get platform"
+#endif // _WIN32
+
+
+std::string System::GetCurrentWorkDir()const { return workDir_; }
+std::string System::GetProjectDir()const { return projectDir_; }
+System& System::Instance() 
+{
+	static System system;
+	return system;
+}
+
+void System::Init(int args, char** argv)
+{
+	projectDir_ = argv[0];
+
+	char* buffer = new char[256];
+	buffer = GET_CWD(buffer, 256);
+	workDir_ = buffer;
+	delete[] buffer;
+}
+
+void System::Destroy() {}
 
 void HelloworldEnvironment::Background(GLFWwindow* window)
 {
@@ -405,6 +441,237 @@ void FPS_Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constra
 	}
 
 	UpdateCameraVectors();
+}
+
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<uint> indices, std::vector<Texture> textures) 
+{
+	this->vertices = vertices;
+	this->indices = indices;
+	this->textures = textures;
+
+	SetupMesh();
+}
+
+void Mesh::Draw(Shader& shader) 
+{
+	uint diffuseNr = 1;
+	uint specularNr = 1;
+
+	for (uint i = 0, size = textures.size();i < size;i++) 
+	{
+		glActiveTexture(TextureNum(i));
+		std::string num;
+		std::string name = textures[i].type;
+		if (name == TEXTURE_DIFFUSE)
+		{
+			num = std::to_string(specularNr++);
+		}
+		else if (name == TEXTURE_SPECULAR)
+		{
+			num = std::to_string(specularNr++);
+		}
+		else 
+		{
+			continue;
+		}
+		shader.SetFloat(("material." + name + num).c_str(), i);
+		glBindTexture(GL_TEXTURE_2D, textures[i].id);
+	}
+	glActiveTexture(GL_TEXTURE0);
+	glBindVertexArray(VAO_);
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+}
+
+void Mesh::SetupMesh() 
+{
+	glGenBuffers(1, &VBO_);
+	glGenBuffers(1, &EBO_);
+	glGenVertexArrays(1, &VAO_);
+
+	glBindVertexArray(VAO_);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint) * indices.size(), &indices[0], GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+	glEnableVertexAttribArray(2);
+
+	glBindVertexArray(0);
+
+}
+
+Model::Model(const char* path) 
+{
+	LoadModel(path);
+}
+
+void Model::Draw(Shader& shader) 
+{
+	uint size = meshes_.size();
+	for (int i = 0;i < size;i++) 
+	{
+		meshes_[i].Draw(shader);
+	}
+}
+
+void Model::LoadModel(const char* path) 
+{
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
+	{
+		std::cout << "ERROR:ASSIMP:" << importer.GetErrorString() << std::endl;
+		return;
+	}
+	std::string str_path(path);
+	directory_ = str_path.substr(0, str_path.find_last_of('/'));
+	ProcessNode(scene->mRootNode, scene);
+}
+
+void Model::ProcessNode(aiNode* node, const aiScene* scene)
+{
+	for (uint i = 0;i < node->mNumMeshes;i++)
+	{
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		meshes_.push_back(ProcessMesh(mesh, scene));
+	}
+	for (uint i = 0;i < node->mNumChildren;i++)
+	{
+		ProcessNode(node->mChildren[i], scene);
+	}
+}
+
+Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene) 
+{
+	std::vector<Vertex> vertices;
+	std::vector<uint> indices;
+	std::vector<Texture> textures;
+
+	//处理顶点
+	for (uint i = 0;i < mesh->mNumVertices;i++) 
+	{
+		Vertex vertex;
+
+		glm::vec3 position;
+		position.x = mesh->mVertices[i].x;
+		position.y = mesh->mVertices[i].y;
+		position.z = mesh->mVertices[i].z;
+		vertex.position = position;
+
+		glm::vec3 normal;
+		normal.x = mesh->mNormals[i].x;
+		normal.y = mesh->mNormals[i].y;
+		normal.z = mesh->mNormals[i].z;
+		vertex.normal = normal;
+
+		glm::vec2 texCoords;
+		if (mesh->mTextureCoords[0]) 
+		{
+			texCoords.x = mesh->mTextureCoords[0][i].x;
+			texCoords.y = mesh->mTextureCoords[0][i].y;
+			vertex.texCoords = texCoords;
+		}
+		else 
+		{
+			vertex.texCoords = glm::vec2(0.0f);
+		}
+
+		vertices.push_back(vertex);
+	}
+
+	//处理索引
+	for (uint i = 0;i < mesh->mNumFaces;i++) 
+	{
+		aiFace face = mesh->mFaces[i];
+		for (uint j = 0;j < face.mNumIndices;j++) 
+		{
+			indices.push_back(face.mIndices[j]);
+		}
+	}
+
+	if(mesh->mMaterialIndex >= 0) 
+	{
+		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+		std::vector<Texture> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, TEXTURE_DIFFUSE);
+		if (!diffuseMaps.empty()) 
+		{
+			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+		}
+		else 
+		{
+			std::cout << "This mesh dosen't find texture_diffuse" << std::endl;
+		}
+
+		std::vector<Texture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, TEXTURE_SPECULAR);
+
+		if (!specularMaps.empty()) 
+		{
+			textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+		}
+		else 
+		{
+			std::cout << "This mesh doesn't find texture_specular" << std::endl;
+		}
+	}
+
+	return Mesh(vertices, indices, textures);
+}
+
+std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
+{
+	std::vector<Texture> textures;
+	uint size = mat->GetTextureCount(type);
+	for (uint i = 0;i < size;i++) 
+	{
+		aiString str;
+		mat->GetTexture(type, i, &str);
+		Texture texture;
+		bool loaded = false;
+		uint loadedSize = textures_loaded.size();
+		for (uint j = 0;j < loadedSize;j++) 
+		{
+			if (str.data == NULL || std::strlen(str.data) == 0) 
+			{
+				break;
+			}
+			if (std::strcmp(str.C_Str(), textures_loaded[j].path.C_Str()) )
+			{
+				textures.push_back(textures_loaded[j]);
+				loaded = true;
+				break;
+			}
+		}
+
+		if (!loaded) 
+		{
+
+			bool success = LoadImage2D(&texture.id, str.C_Str(), GL_REPEAT, GL_NEAREST);
+			if (!success)
+			{
+				texture.id = -1;
+				texture.type = "none";
+			}
+			else
+			{
+				texture.type = typeName;
+			}
+			texture.path = str.C_Str();
+			textures.push_back(texture);
+			textures_loaded.push_back(texture);
+		}
+
+	}
+	return textures;
 }
 
 void FPS_Camera::ProcessMouseScroll(float yoffset) 

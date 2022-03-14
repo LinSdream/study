@@ -12,7 +12,6 @@ typedef glm::mat3 mat3;
 
 #define VALUE_PTR(value) glm::value_ptr(value)
 
-bool LoadImage2D(uint* textureID, const char* path, GLint wrapST_param, GLint filter_param);
 
 class HelloworldGradientEnvironment:public HelloworldEnvironment
 {
@@ -25,6 +24,12 @@ typedef std::function<void(Shader* shader)> DrawFun;
 class DrawBase
 {
 public:
+
+	const vec3 normal = vec3(1.0f, 1.0f, 1.0f);
+	const vec3 up = vec3(0.0f, 1.0f, 0.0f);
+	const vec3 right = vec3(1.0f, 0.0f, 0.0f);
+	const vec3 front = vec3(0.0f, 0.0f, 1.0f);
+	const vec3 zero = vec3(0.0f);
 
 	DrawBase(Shader* shader,FPS_Camera* camera = NULL):camera_(camera) , shader_(shader){}
 	virtual ~DrawBase() {}
@@ -112,11 +117,6 @@ public:
 
 protected:
 
-	const vec3 normal = vec3(1.0f, 1.0f, 1.0f);
-	const vec3 up = vec3(0.0f, 1.0f, 0.0f);
-	const vec3 right = vec3(1.0f, 0.0f, 0.0f);
-	const vec3 front = vec3(0.0f, 0.0f, 1.0f);
-	const vec3 zero = vec3(0.0f);
 
 	Shader* lightShader_;
 	VAOContext* vao_;
@@ -492,8 +492,12 @@ public:
 	~Lightcasters_Spotlight_Draw();
 
 	void Update(const void* context);
+	void Init(const void* context);
 
 private:
+
+	uint lightTexture_;
+
 	struct Light
 	{
 		vec3 color;
@@ -518,10 +522,18 @@ public:
 	MultiLight(Shader* cubeShader, Shader* lightShader, FPS_Camera* camera);
 	~MultiLight();
 
+	void Init(const void* context);
 	void Update(const void* context);
+
+protected:
+
+	uint* textures_;
+	uint texturesCount_;
 
 private:
 	
+	uint lightDiffuse_;
+
 #define NR_POINTER_LIGHTS 4
 
 	struct DirectionLight
@@ -537,9 +549,27 @@ private:
 	{
 		vec3 position;
 
+		vec3 color;
 		vec3 diffuse;
 		vec3 specular;
 		vec3 ambient;
+
+		float k_constant;
+		float k_linear;
+		float k_quadratic;
+	};
+
+	struct SpotLight
+	{
+		vec3 color;
+		vec3 position;
+		vec3 direction;
+		vec3 ambient;
+		vec3 diffuse;
+		vec3 specular;
+
+		float innterCutOff;
+		float outerCutOff;
 
 		float k_constant;
 		float k_linear;
@@ -556,5 +586,33 @@ private:
 
 	void SetDirectionLight(DirectionLight light);
 	void SetPointLight(PointLight light[],int length);
+	void SetSpotLight(SpotLight light);
+};
 
+class RenderModel :public DrawBase
+{
+public :
+
+	RenderModel(const char* modelPath,Shader* shader,FPS_Camera* camera);
+	~RenderModel();
+
+	virtual void Init(const void* context);
+	virtual void Update(const void* context);
+	virtual void MoveCamera(float xpos, float ypos, bool constrainPitch = true);
+	virtual void InputDrive(GLFWwindow* window, float time, float deltaTime);
+
+protected:
+
+	Model* model_;
+
+	bool firstMouse_;
+	float lastX_;
+	float lastY_;
+	float yaw_;
+	float pitch_;
+
+	glm::vec3 cameraPos_ = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 cameraFront_ = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp_ = glm::vec3(0.0f, 1.0f, 0.0f);
+	float cameraSpeed_ = 2.5f;
 };

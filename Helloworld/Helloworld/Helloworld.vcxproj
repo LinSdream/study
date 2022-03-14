@@ -39,19 +39,6 @@
     <ClCompile Include="src\Window\window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Shaders\lightmap.fs" />
-    <None Include="..\Shaders\lightmap.vs" />
-    <None Include="..\Shaders\light_cube.fs" />
-    <None Include="..\Shaders\light_cube.vs" />
-    <None Include="..\Shaders\hello3d.vs" />
-    <None Include="..\Shaders\helloworld.fs" />
-    <None Include="..\Shaders\helloworld.vs" />
-    <None Include="..\Shaders\light.fs" />
-    <None Include="..\Shaders\light.vs" />
-    <None Include="..\Shaders\textures.fs" />
-    <None Include="..\Shaders\textures.vs" />
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="assets\textures\awesomeface.png" />
     <Image Include="assets\textures\container.jpg" />
     <Image Include="assets\textures\container2.png" />
@@ -59,6 +46,23 @@
     <Image Include="assets\textures\lighting_maps_specular_color.png" />
     <Image Include="assets\textures\matrix.jpg" />
     <Image Include="assets\textures\wall.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\Shaders\hello3d.vs" />
+    <None Include="assets\Shaders\helloworld.fs" />
+    <None Include="assets\Shaders\helloworld.vs" />
+    <None Include="assets\Shaders\light.fs" />
+    <None Include="assets\Shaders\light.vs" />
+    <None Include="assets\Shaders\lightcasters_DirectionalLight.fs" />
+    <None Include="assets\Shaders\lightcasters_PointLight.fs" />
+    <None Include="assets\Shaders\lightcasters_Spotlight.fs" />
+    <None Include="assets\Shaders\lightmap.fs" />
+    <None Include="assets\Shaders\lightmap.vs" />
+    <None Include="assets\Shaders\light_cube.fs" />
+    <None Include="assets\Shaders\light_cube.vs" />
+    <None Include="assets\Shaders\multilights.fs" />
+    <None Include="assets\Shaders\textures.fs" />
+    <None Include="assets\Shaders\textures.vs" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -164,7 +168,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3.lib;opengl32.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -17,6 +17,10 @@
 #define EMPTY_STR ""
 #define NEW_DELEGATE MySpace::NewDelegate
 
+#define NONE_TEXTURE "none"
+#define TEXTURE_DIFFUSE "texture_diffuse"
+#define TEXTURE_SPECULAR "texture_specular"
+
 constexpr int SUCCESS = 0x0000;
 constexpr int UNKNOWN = 0x0065;
 constexpr int FAILED = 0x0066;
@@ -39,6 +43,16 @@ float Clamp01(float value);
 float Clamp(float value, float max, float min);
 
 float Abs(float value);
+
+GLenum TextureNum(uint num);
+
+bool LoadImage2D(const uint* textureID, const char* path, GLint wrapST_param, GLint filter_param);
+
+char* Replace_Str(char* str, char ch, char rp);
+
+void nReplace_Str(char* target, char* dest, char ch, char rp);
+
+char* PathFromat(char* path);
 
 /////解绑缓冲区，会将为当前绑定的缓冲区重置为类似NULL的状态
 //void UnBindBuffer();

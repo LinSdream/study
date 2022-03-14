@@ -4,20 +4,24 @@
 Context* CreateContext(int* code);
 void Update(Window* window, Context* context, float time, float deltaTime);
 void DestroyContext(Context* context);
+void Quit();
 
 // api documents:<https://www.khronos.org/registry/OpenGL-Refpages/gl4/>
-int main() 
+int main(int args, char** argv)
 {
 
 #ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetBreakAlloc(泄露的内存块的块编号);
 #endif // _DEBUG
-
 
 	//QuickString s;
 	//s.Append("123123123");
 	//std::cout << s << std::endl;
 	//return 0;
+
+	System::Instance().Init(args, argv);
+	std::cout << System::Instance().GetCurrentWorkDir() << std::endl;
 
 	Window* window = new Window(800, 600, (char*)"hello world",
 		[](GLFWwindow* window, int width, int height) {glViewport(0, 0, width, height); });
@@ -26,6 +30,7 @@ int main()
 	if (code != (int)EWindowStatus::WINDOWSTATUS_SUCCESS)
 	{
 		delete window;
+		Quit();
 		return code; 
 	}
 
@@ -33,6 +38,7 @@ int main()
 	if (code != SUCCESS) 
 	{
 		delete window;
+		Quit();
 		return code;
 	}
 
@@ -84,7 +90,13 @@ int main()
 	DestroyContext(context);
 	delete window;
 
+	Quit();;
 	return SUCCESS;
+}
+
+void Quit()
+{
+	System::Instance().Destroy();
 }
 
 Context* CreateContext(int* code)
@@ -95,16 +107,17 @@ Context* CreateContext(int* code)
 	ShadersManager* sm = context->shaderManager_;
 
 	//这里需要判定，懒得写了
-	sm->CreateShader("helloWorld", "../Shaders/helloworld.vs", "../Shaders/helloworld.fs");
-	sm->CreateShader("texture", "../Shaders/textures.vs", "../Shaders/textures.fs");
-	sm->CreateShader("hello3D", "../Shaders/hello3d.vs", "../Shaders/textures.fs");
-	sm->CreateShader("light", "../Shaders/light.vs", "../Shaders/light.fs");
-	sm->CreateShader("light_cube","../Shaders/light_cube.vs", "../Shaders/light_cube.fs");
-	sm->CreateShader("lightmap","../Shaders/lightmap.vs", "../Shaders/lightmap.fs");
-	sm->CreateShader("lightcasters_DirectionalLight","../Shaders/lightmap.vs", "../Shaders/lightcasters_DirectionalLight.fs");
-	sm->CreateShader("lightcasters_PointLight","../Shaders/lightmap.vs", "../Shaders/lightcasters_PointLight.fs");
-	sm->CreateShader("lightcasters_Spotlight","../Shaders/lightmap.vs", "../Shaders/lightcasters_Spotlight.fs");
-	sm->CreateShader("multilight","../Shaders/lightmap.vs", "../Shaders/multilight.fs");
+	sm->CreateShader("helloWorld", "./assets/Shaders/helloworld.vs", "./assets/Shaders/helloworld.fs");
+	sm->CreateShader("texture", "./assets/Shaders/textures.vs", "./assets/Shaders/textures.fs");
+	sm->CreateShader("hello3D", "./assets/Shaders/hello3d.vs", "./assets/Shaders/textures.fs");
+	sm->CreateShader("light", "./assets/Shaders/light.vs", "./assets/Shaders/light.fs");
+	sm->CreateShader("light_cube","./assets/Shaders/light_cube.vs", "./assets/Shaders/light_cube.fs");
+	sm->CreateShader("lightmap","./assets/Shaders/lightmap.vs", "./assets/Shaders/lightmap.fs");
+	sm->CreateShader("lightcasters_DirectionalLight","./assets/Shaders/lightmap.vs", "./assets/Shaders/lightcasters_DirectionalLight.fs");
+	sm->CreateShader("lightcasters_PointLight","./assets/Shaders/lightmap.vs", "./assets/Shaders/lightcasters_PointLight.fs");
+	sm->CreateShader("lightcasters_Spotlight","./assets/Shaders/lightmap.vs", "./assets/Shaders/lightcasters_Spotlight.fs");
+	sm->CreateShader("multilight","./assets/Shaders/lightmap.vs", "./assets/Shaders/multilights.fs");
+	sm->CreateShader("1.model_loading", "./assets/Shaders/1.model_loading.vs", "./assets/Shaders/1.model_loading.fs");
 
 	context->env_ = new HelloworldGradientEnvironment();
 
@@ -112,6 +125,7 @@ Context* CreateContext(int* code)
 
 	context->draws_[0] = new DrawTwoTriangleUseDiffVAOandVBO((*sm)["helloWorld"]);
 	context->draws_[1] = new DrawCamera((*sm)["hello3D"], context->camera_);
+	context->draws_[2] = new RenderModel("./assets/nanosuit/nanosuit.obj", (*sm)["1.model_loading"], context->camera_);
 	context->draws_[2] = new MultiLight((*sm)["multilight"], (*sm)["light_cube"], context->camera_);
 	context->draws_[3] = new LightDraw((*sm)["light"], (*sm)["light_cube"], context->camera_);
 	context->draws_[4] = new LightingMapsDraw((*sm)["lightmap"], (*sm)["light_cube"], context->camera_);
