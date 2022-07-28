@@ -36,7 +36,7 @@ int main()
 	arr[5] = p6;
 	arr[6] = p7;
 	alg::KdTree tree(arr);
-	alg::CoordinateArray result = tree.inorderTraversal();
+	alg::CoordinateArray result = tree.inOrderTraversal();
 	for (int i = 0; i < result.size(); i++) {
 		std::cout << "(" << result[i][0] << "," << result[i][1] << ")" << std::endl;
 	}
