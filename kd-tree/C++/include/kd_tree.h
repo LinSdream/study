@@ -134,66 +134,88 @@ namespace alg {
 			return sqrtf(powf((cur[0] - target[0]),2) + powf((cur[1] - target[1]), 2));
 		}
 
-		bool compare(const Coordinate& target, KdTreeNode* compareNode, vector< RetrospectiveNode> retrospectiveList,int totalLength) {
-			if (retrospectiveList.size() < totalLength) {
+		bool compare(const Coordinate& target, KdTreeNode* compareNode, vector< RetrospectiveNode>* retrospectiveList,int totalLength) {
+			if (retrospectiveList->size() < totalLength) {
 				RetrospectiveNode node;
 				node.distance = distance(target, compareNode->value);
 				node.node = compareNode;
-				retrospectiveList.push_back(node);
-				sort(retrospectiveList.begin(), retrospectiveList.end(), [](RetrospectiveNode a, RetrospectiveNode b) {
+				retrospectiveList->push_back(node);
+				sort(retrospectiveList->begin(), retrospectiveList->end(), [](RetrospectiveNode a, RetrospectiveNode b) {
 					return a.distance < b.distance;
 					});
 				return true;
 			}
 
 			float distance = this->distance(target, compareNode->value);
-			if (retrospectiveList[retrospectiveList.size() - 1].distance < distance) return false;
+			if ((*retrospectiveList)[retrospectiveList->size() - 1].distance < distance) return false;
 
 			RetrospectiveNode node;
 			node.distance = distance;
 			node.node = compareNode;
-			retrospectiveList[retrospectiveList.size() - 1] = node;
-			sort(retrospectiveList.begin(), retrospectiveList.end(), [](RetrospectiveNode a, RetrospectiveNode b) {
+			(*retrospectiveList)[retrospectiveList->size() - 1] = node;
+			sort(retrospectiveList->begin(), retrospectiveList->end(), [](RetrospectiveNode a, RetrospectiveNode b) {
 				return a.distance < b.distance;
 				});
 			return true;
 		}
 
-		void retrospective(const Coordinate& target, KdTreeNode* cur,list<KdTreeNode*> callOnList, vector< RetrospectiveNode> retrospectiveList,int totalLength) {
-			
-			if (cur->parent == NULL) return;
-			list<KdTreeNode*>::iterator itr = std::find(callOnList.begin(), callOnList.end(), cur);
-			
-			if (itr != callOnList.end()) {
-				retrospective(target,cur->parent, callOnList, retrospectiveList, totalLength);
+		bool existElement(list<KdTreeNode*>* arr, KdTreeNode* element) {
+			list<KdTreeNode*>::iterator itr = std::find(arr->begin(), arr->end(), element);
+			if (itr != arr->end()) return true;
+			return false;
+		}
+
+		void retrospective(const Coordinate& target, KdTreeNode* cur,list<KdTreeNode*>* callOnList,
+			vector< RetrospectiveNode>* retrospectiveList,int totalLength) 
+		{
+			if (cur == NULL) return;
+			list<KdTreeNode*>::iterator itr = std::find(callOnList->begin(), callOnList->end(), cur);
+			if (existElement(callOnList,cur)) {
+				retrospective(target, cur->parent, callOnList, retrospectiveList, totalLength);
 				return;
 			}
+			callOnList->push_back(cur);
 			compare(target, cur, retrospectiveList, totalLength);
+			//叶节点，回溯
+			if (cur->split == -1) {
+				retrospective(target, cur->parent, callOnList, retrospectiveList, totalLength);
+				return;
+			}
+			//非叶节点，计算与切线的距离
 			float distance = 0;
 			if (cur->split == 0) {
-				Coordinate coordinate;
+				Coordinate coordinate(2);
 				coordinate[0] = cur->value[0];
 				coordinate[1] = 0;
 				distance = this->distance(target, coordinate);
 			}
 			else {
-				Coordinate coordinate;
+				Coordinate coordinate(2);
 				coordinate[0] = 0;
 				coordinate[1] = cur->value[1];
 				distance = this->distance(target, coordinate);
 			}
 
-			if (retrospectiveList.size() == totalLength && distance >= retrospectiveList[retrospectiveList.size() - 1].distance) {
+			// 如果距离大于切线，继续回溯
+			if (retrospectiveList->size() == totalLength && distance > (*retrospectiveList)[retrospectiveList->size() - 1].distance) {
+				retrospective(target, cur->parent, callOnList, retrospectiveList, totalLength);
 				return;
 			}
-			list<KdTreeNode*>::iterator itr = std::find(callOnList.begin(), callOnList.end(), cur->left);
-			if (itr == callOnList.end()) {
-				findLeafNode(target, cur->right);
-				retrospective(target, cur->right, callOnList, retrospectiveList, totalLength);
-				return;
+			// 去另一个树,
+			//左子树
+			if (cur->right!= NULL && !existElement(callOnList,cur->right)) {
+				KdTreeNode* node = findLeafNode(target, cur->right);
+				retrospective(target, node, callOnList, retrospectiveList, totalLength);
 			}
-			findLeafNode(target, cur->left);
-			retrospective(target, cur->left, callOnList, retrospectiveList, totalLength);
+			else if(cur->left!= NULL && !existElement(callOnList,cur->left)) {
+				KdTreeNode* node = findLeafNode(target, cur->left);
+				retrospective(target, node, callOnList, retrospectiveList, totalLength);
+			}
+			else {
+				//如果只有一个子节点并且是已经访问过的，就继续往上找
+				retrospective(target, cur->parent, callOnList, retrospectiveList, totalLength);
+
+			}
 		}
 
 		KdTreeNode* findLeafNode(const Coordinate& target,  KdTreeNode* node) {
@@ -205,6 +227,13 @@ namespace alg {
 			}
 			return findLeafNode(target, node->right);
 		}
+
+		void deleteTree(KdTreeNode* root) {
+			if (root == NULL) return;
+			deleteTree(root->left);
+			deleteTree(root->right);
+			delete root;
+		}
 	public :
 
 		KdTree(const CoordinateArray& arr) {
@@ -214,7 +243,7 @@ namespace alg {
 		};
 
 		~KdTree() {
-			
+			deleteTree(_tree);
 		}
 
 		CoordinateArray find(const Coordinate& target, int count) {
@@ -222,7 +251,16 @@ namespace alg {
 			auto leaf = findLeafNode(target, _tree);
 			list<KdTreeNode*> callOnList;
 			vector< RetrospectiveNode> retrospectiveList;
-			retrospective(target, leaf, callOnList, retrospectiveList, count);
+
+			//callOnList.push_back(leaf);
+			//RetrospectiveNode node;
+			//
+			//node.distance = distance(target, leaf->value);
+			//node.node = leaf;
+			//retrospectiveList.push_back(node);
+			//
+			retrospective(target, leaf, &callOnList, &retrospectiveList, count);
+			
 			CoordinateArray arr(count);
 			for (int i = 0; i < retrospectiveList.size(); i++) {
 				arr[i] = retrospectiveList[i].node->value;
