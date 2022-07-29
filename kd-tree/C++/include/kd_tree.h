@@ -252,13 +252,6 @@ namespace alg {
 			list<KdTreeNode*> callOnList;
 			vector< RetrospectiveNode> retrospectiveList;
 
-			//callOnList.push_back(leaf);
-			//RetrospectiveNode node;
-			//
-			//node.distance = distance(target, leaf->value);
-			//node.node = leaf;
-			//retrospectiveList.push_back(node);
-			//
 			retrospective(target, leaf, &callOnList, &retrospectiveList, count);
 			
 			CoordinateArray arr(count);
