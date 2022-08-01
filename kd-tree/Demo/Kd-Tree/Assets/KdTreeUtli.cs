@@ -49,19 +49,7 @@ namespace Alg
 
         public float GetValueBySplit(Vector3 value, short split)
         {
-            if (split == 0)
-            {
-                return value.x;
-            }
-            else if (split == 1)
-            {
-                return value.y;
-            }
-            else if (split == 2)
-            {
-                return value.z;
-            }
-            return 0f;
+            return value[split];
         }
 
         public KdTreeNode FindLeafNode(in Vector3 position, KdTreeNode node)
@@ -82,21 +70,7 @@ namespace Alg
         public float CalculateDistanceBySplit(in Vector3 position, KdTreeNode node)
         {
             Vector3 pos = node.value.position;
-            if(node.split == 0)
-            {
-                pos.y = 0f;
-                pos.z = 0f;
-            }
-            else if(node.split == 1)
-            {
-                pos.x = 0f;
-                pos.z = 0f;
-            }
-            else if (node.split == 2)
-            {
-                pos.x = 0f;
-                pos.y = 0f;
-            }
+            pos[node.split] = 0f;
             return Distance(in pos, in position);
         }
     }
