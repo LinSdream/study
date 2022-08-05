@@ -8,6 +8,7 @@ namespace Alg
         public KdTreeNode left;
         public KdTreeNode right;
         public Transform value;
+        public bool visit;
 
         public short split;
         public bool IsLeaf

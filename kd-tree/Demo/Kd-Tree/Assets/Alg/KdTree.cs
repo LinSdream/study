@@ -21,23 +21,35 @@ namespace Alg
         private KdTreeNode _root;
         private int _size;
         private KdTreeUtli _util;
+        private bool _includeY;
 
 
-        public KdTree(Transform[] position)
+        public KdTree(Transform[] position, bool includeY = false)
         {
+            _includeY = includeY;
             _size = position.Length;
-            _util = new KdTreeUtli();
+            _util = new KdTreeUtli(_includeY);
 
             _root = new KdTreeNode();
             BuildTree(null, _root, 0, new List<Transform>(position));
         }
 
-        public KdTreeNode[] Find(in Vector3 position, int count)
+        private void ResetVisit(KdTreeNode root)
+        {
+            if (root != null)
+            {
+                root.visit = false;
+                ResetVisit(root.left);
+                ResetVisit(root.right);
+            }
+        }
+
+        public KdTreeNode[] Find(in Vector3 position, int count, out List<ResultNode> results)
         {
             var leaf = _util.FindLeafNode(in position, _root);
-            List<KdTreeNode> callOn = new List<KdTreeNode>(_size);
-            List<ResultNode> results = new List<ResultNode>(count);
-            Retrospective(in position, leaf, callOn, results);
+            results = new List<ResultNode>(count);
+            Retrospective(in position, leaf, results);
+            ResetVisit(_root);
             KdTreeNode[] result = new KdTreeNode[results.Count];
             for (int i = 0; i < result.Length; i++)
             {
@@ -59,51 +71,51 @@ namespace Alg
             if (left != null && left.Count != 0)
             {
                 root.left = new KdTreeNode();
-                BuildTree(root, root.left, (short)((split + 1) % 3), left);
+                BuildTree(root, root.left, _includeY ? (short)((split + 1) % 3) : (short)((split + 1) % 2), left);
             }
             if (right != null && right.Count != 0)
             {
                 root.right = new KdTreeNode();
-                BuildTree(root, root.right, (short)((split + 1) % 3), right);
+                BuildTree(root, root.right, _includeY ? (short)((split + 1) % 3) : (short)((split + 1) % 2), right);
             }
         }
 
-        private void Retrospective(in Vector3 position, KdTreeNode cur, List<KdTreeNode> callOn, List<ResultNode> results)
+        private void Retrospective(in Vector3 position, KdTreeNode cur, List<ResultNode> results)
         {
             if (cur == null) return;
-            if (callOn.Exists(v => v == cur))
+            if (cur.visit)
             {
-                Retrospective(in position, cur.parent, callOn, results);
+                Retrospective(in position, cur.parent, results);
                 return;
             }
-            callOn.Add(cur);
+            cur.visit = true;
             Campare(in position, cur, results);
             if (cur.IsLeaf)
             {
-                Retrospective(in position, cur.parent, callOn, results);
+                Retrospective(in position, cur.parent, results);
                 return;
             }
 
             float distance = _util.CalculateDistanceBySplit(in position, cur);
 
-            //if (results.Count == results.Capacity && distance > results[results.Count - 1].distance)
-            //{
-            //    Retrospective(in position, cur.parent, callOn, results);
-            //    return;
-            //}
-            if (cur.right != null && !callOn.Exists(v => v == cur.right))
+            if (results.Count == results.Capacity && distance > results[results.Count - 1].distance)
+            {
+                Retrospective(in position, cur.parent, results);
+                return;
+            }
+            if (cur.right != null && !cur.right.visit)
             {
                 KdTreeNode node = _util.FindLeafNode(in position, cur.right);
-                Retrospective(in position, node, callOn, results);
+                Retrospective(in position, node, results);
             }
-            else if (cur.left != null && !callOn.Exists(v => v == cur.left))
+            else if (cur.left != null && !cur.left.visit)
             {
                 KdTreeNode node = _util.FindLeafNode(in position, cur.left);
-                Retrospective(in position, node, callOn, results);
+                Retrospective(in position, node, results);
             }
             else
             {
-                Retrospective(in position, cur.parent, callOn, results);
+                Retrospective(in position, cur.parent, results);
             }
         }
 

@@ -570,7 +570,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   prefab: {fileID: 6427382213268823229, guid: ec6d468ad54c19444823e633ba47e317, type: 3}
-  count: 50
+  count: 1000
   minRange: {x: -5, y: 5}
   isRangeY: 0
+  useKdFind: 0
   playerController: {fileID: 533854820}
