@@ -17,6 +17,18 @@ public static class Program
         Case4();
     }
 
+    public struct IdCountVal
+    {
+        public int id;
+        public int count;
+        public int val;
+    }
+
+    private static void Bag()
+    {
+
+    }
+
     private static void Case1()
     {
         Stopwatch sw = new Stopwatch();
