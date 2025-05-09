@@ -42,17 +42,22 @@ def normal_file_parse(data, target_path, file_name):
                 str = "\t[{0}] = {{ ".format(row)
                 row = row + 1
                 for i in range(len(key_dir)):
-                    str += "{0} = {1}, ".format(key_dir[i], type_parse(type_dir[i], arr[i]))
+                    str += "{0} = {1}, ".format(key_parse(key_dir[i]), type_parse(type_dir[i], arr[i]))
                 str = str[:-1]
                 str += " },\n"
                 w.write(str)
             w.write("}\n")
             w.write("return {0}".format(file_name))
 
+def key_parse(key):
+    if key == 'function':
+        return "[\"function\"]"
+    else:
+        return key
 
 def type_parse(type, content):
     if type == 'string':
-        content = content.replace('\\', '/')
+        content = content.replace('\\', '/').replace("\n", "\\n").replace('"', "\\\"")
         return "\"{0}\"".format(content)
     elif type == 'int array':
         if content == "":
@@ -64,16 +69,25 @@ def type_parse(type, content):
         res = res[:-2]
         res += ' }'
         return res
+    elif type == 'text':
+        return "[==[{0}]==]".format(content)
     elif type == 'string array':
         if content == "":
             return r"{}"
         arr = content.split(';')
         res = '{ '
         for element in arr:
-            element = element.replace('\\', '/')
+            element = element.replace('\\', '/').replace("\n", "\\n")
             res += "\"{0}\", ".format(element)
         res = res[:-2]
         res += ' }'
         return res
+    elif type == 'int':
+        if content == "":
+            return "0"
+        else:
+            return content
+    elif type == 'bool':
+        return content.lower()
     else:
         return content

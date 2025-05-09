@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <Reference Include="CommonModule">
-      <HintPath>..\CommonModule\bin\Release\net6.0\CommonModule.dll</HintPath>
+      <HintPath>..\CommonModule\bin\Debug\net6.0\CommonModule.dll</HintPath>
     </Reference>
   </ItemGroup>
 
