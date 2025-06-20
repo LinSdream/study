@@ -1,0 +1,14 @@
+
+default: &default_setting
+  shell_path : /mnt/e/work/PD/tools/cfg2lua
+
+command:
+ update_config:
+   name: ./autoUpdate.sh
+   returnArgsIndex: 0
+   <<: *default_setting
+ 
+ search_config:
+   name: ./search.sh
+   returnArgsIndex: 1
+   <<: *default_setting

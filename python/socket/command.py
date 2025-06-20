@@ -1,5 +1,7 @@
 import subprocess
 import shlex
+import yaml
+from util import log_i
 
 def process_exec(command, shell=False, cwd=None, timeout=None):
     process_info = list(map(str, command))
@@ -39,9 +41,24 @@ def exec(command_str:str):
     if not command:
         return "no send command"
     
-    if command == "update_config":
-        return update_config(args)
-    if command == "search_config":
-        return search_config(args)
+    with open("server_command.yaml", "r") as f:
+        yaml_data = yaml.safe_load(f)
+
+    commands = yaml_data["command"]
+    if command not in commands:
+        return "no command"
     
-    return "no define command"
+    log_i("Exec", f"{args}")
+    tarcmd = commands[command]
+    cmd = ["/bin/bash", tarcmd["name"]]
+    cmd.extend(list(map(str,args)))
+    try:
+        ret = process_exec(cmd, cwd=tarcmd["shell_path"])[int(tarcmd["returnArgsIndex"])]
+    except Exception as e:
+        print(e)
+        return 1
+    return ret
+
+
+if __name__ == "__main__":
+    exec("search_config -c 'id'")

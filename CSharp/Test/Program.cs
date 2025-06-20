@@ -1,83 +1,89 @@
 ﻿using CommonModule.Logger;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text.Unicode;
-using System.Text.Encodings;
-using System.Text;
 public static class Program
 {
     public static ILogger Logger = LogFactory.CreateLogger(LogFactory.ECreateLoggerType.CONSOLE);
 
-    public class Obs
+    public class IdCountVal
     {
-        public Action<int> OnValueChanged;
+        public int id { get; set; }
+        public int count { get; set; }
+        public int val { get; set; }
 
-        private int _val;
-
-        public int Val
+        public IdCountVal()
         {
-            get
+
+        }
+
+        public IdCountVal(int id, int count, int val)
+        {
+            this.id = id;
+            this.count = count;
+            this.val = val;
+        }
+    }
+
+    private static Dictionary<int, (int idx, int curVal, int nextVal)> _attriDiffTmp = new();
+    private static List<(int id, int curVal, int nextVal)> _attriScrollTmpList = new();
+
+    public static Task AAAAA()
+    {
+        return Task.CompletedTask;
+    }
+
+    public static void DiffAttri(IdCountVal[] curAttriArr, IdCountVal[] nextAttriArr,
+        ref List<(int id, int curVal, int nextVal)> ret)
+    {
+        AAAAA();
+        _attriDiffTmp.Clear();
+        var index = 0;
+        foreach (var attri in curAttriArr)
+        {
+            _attriDiffTmp[attri.id] = (index++, attri.count, 0);
+        }
+
+        foreach (var attri in nextAttriArr)
+        {
+            if (_attriDiffTmp.ContainsKey(attri.id))
             {
-                return _val;
+                _attriDiffTmp[attri.id] = (_attriDiffTmp[attri.id].idx, _attriDiffTmp[attri.id].curVal, attri.count);
             }
-            set
+            else
             {
-                _val = value;
-                OnValueChanged?.Invoke(_val);
+                _attriDiffTmp[attri.id] = (index++, 0, attri.count);
             }
         }
 
-        public struct Auto : IDisposable
-        {
-            private Obs _o;
-            private Action<int> _onValueChanged;
-            public Auto(Obs o, Action<int> call)
-            {
-                _o = o;
-                _onValueChanged = call;
-                _o.OnValueChanged += _onValueChanged;
-            }
-
-            public void Dispose()
-            {
-                _o.OnValueChanged -= _onValueChanged;
-            }
-        }
+        ret.AddRange(
+            _attriDiffTmp.Select(pair => (pair.Key, pair.Value.curVal, pair.Value.nextVal))
+        );
     }
 
     public static int Main(params string[] args)
     {
-        Socket c = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        try
+
+        List<(int id, int curVal, int nextVal)> list = new List<(int id, int curVal, int nextVal)>();
+        IdCountVal[] curAttriArr =
+            new IdCountVal[] {
+                new IdCountVal(1, 10, 0),
+                new IdCountVal(2, 20, 0),
+                new IdCountVal(3, 30, 0),
+            };
+
+        IdCountVal[] nextAttriArr =
+            new IdCountVal[] {
+                new IdCountVal(1, 15, 0),
+                new IdCountVal(2, 20, 0),
+                new IdCountVal(4, 40, 0),
+            };
+
+        DiffAttri(curAttriArr, nextAttriArr, ref list);
+
+        foreach (var item in list)
         {
-            c.Connect("127.0.0.1", 23548);
-            string fuck = "update_config";
-            List<byte> data = new List<byte>();
-
-            var list = BitConverter.GetBytes(fuck.Length);
-            if (BitConverter.IsLittleEndian)
-            {
-                data.AddRange(list.Reverse());
-            }
-            else
-            {
-                data.AddRange(list);
-            }
-
-            data.AddRange(Encoding.UTF8.GetBytes(fuck));
-            c.Send(data.ToArray());
-
-            byte[] resp = new byte[1024];
-            c.Receive(resp);
-            var res  = Encoding.UTF8.GetString(resp);
-            Logger.Info(res);
-            return 0;
+            Logger.Info(item.id + " " + item.curVal + " " + item.nextVal);
         }
-        finally
-        {
-            Logger.Info("close socket");
-            c.Close();
-        }
+
         return 0;
+
     }
 }

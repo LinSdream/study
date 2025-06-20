@@ -2,6 +2,7 @@ import socket
 import struct
 from sys import stderr, exit
 import traceback
+from util import log_i
 
 class custom_server:
     __host:str
@@ -49,11 +50,11 @@ class custom_server:
         self.__s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__s.bind((self.__host, self.__port))
         self.__s.listen(self.__backlog)
-        print(f"[server][I] 服务启动")
+        log_i("server", "服务启动")
         try:
             while True:
                 client, addr = self.__s.accept()
-                print(f"[server][I] 客户端连接 addr: {addr}")
+                log_i("server", f"客户端连接 addr: {addr}")
                 try:
                     while True:
                         command = self.__recv_data(client)
@@ -65,12 +66,12 @@ class custom_server:
                         else:
                             self.__send_data(client, "faild! no command can exec")
                 except ConnectionResetError:
-                    print(f"[server][I] 客户端断开连接 addr:{addr}")
+                    log_i("server", f"客户端断开连接 addr: {addr}")
                 finally:
-                    print(f"[server][I] 关闭客户端 addr:{addr}")
+                    log_i("server", f"关闭客户端 addr: {addr}")
                     client.close()
         except KeyboardInterrupt:
-            print("关闭服务端")
+            log_i("server", "关闭服务端")
         except Exception as e:
           err=f"{e.args}\n{traceback.format_exc()}"
           stderr.write(err)
